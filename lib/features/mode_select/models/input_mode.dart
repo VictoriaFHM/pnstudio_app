@@ -1,15 +1,19 @@
-enum InputMode { basico, exacto, porcentaje }
+// lib/features/mode_select/models/input_mode.dart
+enum InputMode {
+  basico, // sólo vth, rth, (pMinW opcional)
+  exacto, // k y c en [0..1]
+  porcentaje, // k% y c% en [0..100]
+}
 
 extension InputModeX on InputMode {
-  String get label => switch (this) {
-    InputMode.basico => 'Básico',
-    InputMode.exacto => 'Valores exactos',
-    InputMode.porcentaje => 'Porcentaje',
-  };
-
-  String get description => switch (this) {
-    InputMode.basico => 'Solo Vth y RTh',
-    InputMode.exacto => 'Vth, RTh, k y c',
-    InputMode.porcentaje => 'Vth, RTh, k% y c%',
-  };
+  String get label {
+    switch (this) {
+      case InputMode.basico:
+        return 'Básico';
+      case InputMode.exacto:
+        return 'Exacto';
+      case InputMode.porcentaje:
+        return 'Porcentaje';
+    }
+  }
 }

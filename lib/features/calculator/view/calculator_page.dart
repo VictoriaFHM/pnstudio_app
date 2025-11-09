@@ -1,99 +1,270 @@
-// lib/features/calculator/view/calculator_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pnstudio_app/core/constants/spacing.dart';
-import 'package:pnstudio_app/core/widgets/app_scaffold.dart';
-import 'package:pnstudio_app/data/models/compute_request.dart';
-import 'package:pnstudio_app/features/mode_select/models/input_mode.dart';
-import '../controller/calculator_controller.dart';
-import '../widgets/data_form.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show AsyncValue; // solo para AsyncValue
+import '../../../core/utils/validators.dart';
+import '../../mode_select/models/input_mode.dart';
+import '../../../data/repositories/compute_repository.dart';
+import '../../../data/models/compute_request.dart';
+import '../../../data/models/compute_response.dart';
+
 import '../widgets/chart_panel.dart';
 import '../widgets/ranges_panel.dart';
 import '../widgets/sticky_help_drawer.dart';
 
-class CalculatorPage extends ConsumerWidget {
+class CalculatorPage extends StatefulWidget {
   final InputMode mode;
   const CalculatorPage({super.key, required this.mode});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(calculatorControllerProvider(mode));
-    final ctrl = ref.read(calculatorControllerProvider(mode).notifier);
+  State<CalculatorPage> createState() => _CalculatorPageState();
+}
 
-    return AppScaffold(
-      title: 'Cálculos • ${mode.label}',
-      body: Stack(
-        children: [
-          LayoutBuilder(
-            builder: (context, c) {
-              final isWide = c.maxWidth >= 980;
+class _CalculatorPageState extends State<CalculatorPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _computeRepo = ComputeRepository();
 
-              final form = DataForm(
-                mode: mode,
-                busy: state.result.isLoading,
-                onSubmit: (vth, rth, {k, kPercent, c, cPercent, pMinW}) async {
-                  final req = ComputeRequest(
-                    vth: vth,
-                    rth: rth,
-                    k: k,
-                    kPercent: kPercent,
-                    c: c,
-                    cPercent: cPercent,
-                    pMinW: pMinW,
-                  );
-                  final result = await ctrl.submit(
-                    req,
-                  ); // <- devuelve ComputeResponse?
-                  if (result != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Cálculo listo ✔')),
-                    );
-                  }
-                },
-              );
+  final _vth = TextEditingController();
+  final _rth = TextEditingController();
+  final _k = TextEditingController();
+  final _kPercent = TextEditingController();
+  final _c = TextEditingController();
+  final _cPercent = TextEditingController();
+  final _pMinW = TextEditingController();
 
-              final right = Column(
+  ComputeResponse? _result;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _vth.dispose();
+    _rth.dispose();
+    _k.dispose();
+    _kPercent.dispose();
+    _c.dispose();
+    _cPercent.dispose();
+    _pMinW.dispose();
+    super.dispose();
+  }
+
+  double? _toDoubleOrNull(String s) {
+    final t = s.trim();
+    if (t.isEmpty) return null;
+    return double.tryParse(t.replaceAll(',', '.'));
+  }
+
+  ComputeRequest _buildRequest() {
+    final vth = double.parse(_vth.text.replaceAll(',', '.'));
+    final rth = double.parse(_rth.text.replaceAll(',', '.'));
+    final k = _toDoubleOrNull(_k.text);
+    final kPercent = _toDoubleOrNull(_kPercent.text);
+    final c = _toDoubleOrNull(_c.text);
+    final cPercent = _toDoubleOrNull(_cPercent.text);
+    final pMinW = _toDoubleOrNull(_pMinW.text);
+
+    switch (widget.mode) {
+      case InputMode.exacto:
+        return ComputeRequest(vth: vth, rth: rth, k: k, c: c, pMinW: pMinW);
+      case InputMode.porcentaje:
+        return ComputeRequest(
+          vth: vth,
+          rth: rth,
+          kPercent: kPercent,
+          cPercent: cPercent,
+          pMinW: pMinW,
+        );
+      case InputMode.basico:
+        return ComputeRequest(vth: vth, rth: rth, pMinW: pMinW);
+    }
+  }
+
+  Future<void> _onSubmit() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _result = null;
+    });
+
+    try {
+      final ex1 = Validators.mutuallyExclusive(
+        _k.text,
+        _kPercent.text,
+        'k',
+        'k%',
+      );
+      final ex2 = Validators.mutuallyExclusive(
+        _c.text,
+        _cPercent.text,
+        'c',
+        'c%',
+      );
+      if (ex1 != null || ex2 != null) {
+        setState(() {
+          _loading = false;
+          _error = ex1 ?? ex2;
+        });
+        return;
+      }
+
+      if (!_formKey.currentState!.validate()) {
+        setState(() => _loading = false);
+        return;
+      }
+
+      final req = _buildRequest();
+      final res = await _computeRepo.compute(req);
+      setState(() => _result = res);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  AsyncValue<ComputeResponse?> get _rangesAsync {
+    if (_loading) return const AsyncValue.loading();
+    if (_error != null) {
+      return AsyncValue.error(_error!, StackTrace.empty);
+    }
+    return AsyncValue.data(_result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showExact = widget.mode == InputMode.exacto;
+    final showPercent = widget.mode == InputMode.porcentaje;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Calculadora')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Stack(
+            children: [
+              // contenido principal
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const ChartPanel(),
-                  const SizedBox(height: Gaps.lg),
-                  RangesPanel(result: state.result),
-                ],
-              );
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _vth,
+                          decoration: const InputDecoration(
+                            labelText: 'Vth (V) *',
+                          ),
+                          validator: (v) => Validators.requiredPositive(v),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                        TextFormField(
+                          controller: _rth,
+                          decoration: const InputDecoration(
+                            labelText: 'Rth (Ω) *',
+                          ),
+                          validator: (v) => Validators.requiredPositive(v),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                        if (showExact) ...[
+                          TextFormField(
+                            controller: _k,
+                            decoration: const InputDecoration(
+                              labelText: 'k (0..1)',
+                            ),
+                            validator: Validators
+                                .cRange, // misma validación de rango numérico
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _c,
+                            decoration: const InputDecoration(
+                              labelText: 'c (0..1)',
+                            ),
+                            validator: Validators.cRange,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                          ),
+                        ],
+                        if (showPercent) ...[
+                          TextFormField(
+                            controller: _kPercent,
+                            decoration: const InputDecoration(
+                              labelText: 'k% (0..100)',
+                            ),
+                            validator: (v) => Validators.kPercentRange(v),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _cPercent,
+                            decoration: const InputDecoration(
+                              labelText: 'c% (0..100)',
+                            ),
+                            validator: Validators.cPercentRange,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                          ),
+                        ],
+                        TextFormField(
+                          controller: _pMinW,
+                          decoration: const InputDecoration(
+                            labelText: 'P mínima (W)',
+                          ),
+                          validator: Validators.nonNegative,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: _loading ? null : _onSubmit,
+                          child: _loading
+                              ? const CircularProgressIndicator()
+                              : const Text('Calcular'),
+                        ),
+                        if (_error != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _error!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.all(Gaps.lg),
-                        child: form,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 7,
-                      child: Padding(
-                        padding: const EdgeInsets.all(Gaps.lg),
-                        child: right,
-                      ),
-                    ),
-                  ],
-                );
-              } else {
-                return ListView(
-                  padding: const EdgeInsets.all(Gaps.lg),
-                  children: [
-                    form,
-                    const SizedBox(height: Gaps.lg),
-                    ...right.children,
-                  ],
-                );
-              }
-            },
+                  // fila con gráfica + rangos
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Expanded(child: ChartPanel()),
+                      SizedBox(width: 16),
+                      // RangesPanel necesita AsyncValue<ComputeResponse?>
+                      // lo pasamos desde _rangesAsync
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // mostramos rangos/recomendaciones
+                  RangesPanel(result: _rangesAsync),
+                ],
+              ),
+
+              // cajoncito de ayuda a la derecha
+              const Positioned(right: 0, top: 0, child: StickyHelpDrawer()),
+            ],
           ),
-          const StickyHelpDrawer(),
-        ],
+        ),
       ),
     );
   }

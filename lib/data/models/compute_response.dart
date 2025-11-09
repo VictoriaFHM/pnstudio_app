@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'compute_response.g.dart';
 
 @JsonSerializable()
@@ -15,7 +16,7 @@ class ComputeResponse {
   final double? etaAtRec;
   final double? pAtRec;
 
-  ComputeResponse({
+  const ComputeResponse({
     required this.feasible,
     required this.pmax,
     required this.rlMin,
@@ -31,5 +32,6 @@ class ComputeResponse {
 
   factory ComputeResponse.fromJson(Map<String, dynamic> json) =>
       _$ComputeResponseFromJson(json);
+
   Map<String, dynamic> toJson() => _$ComputeResponseToJson(this);
 }
