@@ -21,8 +21,8 @@ class IntroTeoremaCard extends StatelessWidget {
             Text(
               // ✅ “media” (conciso y técnico)
               'El teorema de máxima transferencia de potencia establece que la potencia máxima entregada'
-              'a una carga ocurre cuando la resistencia de carga (Rl) es igual a la resistencia de'
-              'la fuente (Rs) en circuitos de CC, o cuando la impedancia de carga (Zl) es'
+              'a una carga ocurre cuando la resistencia de carga (RL) es igual a la resistencia de'
+              'la fuente (Rs) en circuitos de CC, o cuando la impedancia de carga (ZL) es'
               'el conjugado complejo de la impedancia de la fuente (Zs) en circuitos de CA.'
               'Este teorema es fundamental en el diseño de circuitos para aplicaciones como'
               'sistemas de comunicación, audio y arranque de automóviles.'
