@@ -22,7 +22,7 @@ class WelcomePage extends StatelessWidget {
                 const Text(
                   'Teorema de Máxima Transferencia de Potencia',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
 
