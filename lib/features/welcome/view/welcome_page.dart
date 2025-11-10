@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../widgets/intro_teorema_card.dart';
@@ -50,7 +51,7 @@ class WelcomePage extends StatelessWidget {
 
                 Center(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pushNamed('/mode'),
+                    onPressed: () => context.push('/mode'),
                     child: const Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 24,

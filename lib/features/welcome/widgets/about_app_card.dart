@@ -17,7 +17,7 @@ class AboutAppCard extends StatelessWidget {
               '¿Para qué sirve esta página?',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             Text(
               'Aquí ingresás Vth y Rth, elegís cómo modelar pérdidas (k - eficiencia'
               'y c - potencia, ya sea en valor directo o en porcentaje) y la app calcula: '

@@ -17,7 +17,7 @@ class IntroTeoremaCard extends StatelessWidget {
               '¿Qué es?',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 6),
             Text(
               // ✅ “media” (conciso y técnico)
               'El teorema de máxima transferencia de potencia establece que la potencia máxima entregada'

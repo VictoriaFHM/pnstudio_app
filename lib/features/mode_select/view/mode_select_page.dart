@@ -1,12 +1,13 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../models/input_mode.dart';
+import 'package:flutter/material.dart';
 import 'package:pnstudio_app/features/mode_select/models/input_mode.dart';
 
 class ModeSelectPage extends StatelessWidget {
   const ModeSelectPage({super.key});
 
-  void _go(BuildContext context, InputMode m) {
-    context.go('/calc', extra: m);
+  void _goToCalc(BuildContext context, InputMode mode) {
+    context.push('/calc', extra: mode); // <- pasa el modo a /calc
   }
 
   @override
@@ -14,7 +15,7 @@ class ModeSelectPage extends StatelessWidget {
     final t = Theme.of(context).textTheme;
 
     Widget chip(String text, IconData icon, InputMode m) => InkWell(
-      onTap: () => _go(context, m),
+      onTap: () => _goToCalc(context, m),
       borderRadius: BorderRadius.circular(20),
       child: Chip(
         avatar: Icon(icon),
