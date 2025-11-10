@@ -1,78 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/info_card.dart';
-import '../../../core/constants/spacing.dart';
+import '../widgets/intro_teorema_card.dart';
+import '../widgets/about_app_card.dart';
+import '../widgets/circuit_reference_card.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
     return AppScaffold(
-      title: '¡Bienvenido a PnStudio!',
-      body: Padding(
-        padding: const EdgeInsets.all(Gaps.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Teorema de Máxima Transferencia de Potencia',
-              style: t.headlineMedium,
-            ),
-            const SizedBox(height: Gaps.md),
-            Row(
+      title: 'PnStudio',
+      body: LayoutBuilder(
+        builder: (context, c) {
+          final isWide = c.maxWidth >= 900;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: InfoCard(
-                    title: '¿Qué es?',
-                    body:
-                        'Cuando RL = RTh, la potencia en la carga es máxima. '
-                        'La eficiencia final dependerá de k y c.',
-                  ),
+                const Text(
+                  'Teorema de Máxima Transferencia de Potencia',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(width: Gaps.md),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(Gaps.md),
-                      child: Image.asset(
-                        'assets/images/circuit_reference.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) =>
-                            const Text('Sube circuit_reference.png'),
+                const SizedBox(height: 16),
+
+                // Dos tarjetas lado a lado en pantallas anchas; en columna en móvil
+                isWide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Expanded(child: IntroTeoremaCard()),
+                          SizedBox(width: 16),
+                          Expanded(child: AboutAppCard()),
+                        ],
+                      )
+                    : const Column(
+                        children: [
+                          IntroTeoremaCard(),
+                          SizedBox(height: 12),
+                          AboutAppCard(),
+                        ],
                       ),
+                const SizedBox(height: 12),
+
+                const CircuitReferenceCard(),
+                const SizedBox(height: 20),
+
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pushNamed('/mode'),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: Text('Comenzar a calcular'),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: Gaps.lg),
-            SizedBox(
-              height: 160,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(Gaps.md),
-                  child: Image.asset(
-                    'assets/images/p_vs_rl.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
-                        const Text('Sube p_vs_rl.png'),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: Gaps.lg),
-            Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                onPressed: () => context.go('/mode'),
-                child: const Text('Comenzar a calcular'),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
