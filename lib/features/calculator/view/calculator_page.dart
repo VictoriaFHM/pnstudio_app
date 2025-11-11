@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show AsyncValue;
 
-import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/utils/validators.dart';
+import '../utils/calculator_utils.dart';
 
 import '../../mode_select/models/input_mode.dart';
 import '../../../data/repositories/compute_repository.dart';
@@ -120,34 +120,40 @@ class _CalculatorPageState extends State<CalculatorPage> {
   double? toDoubleOrNullCtrl(TextEditingController c) =>
       isEmpty(c.text) ? null : double.tryParse(c.text.trim().replaceAll(',', '.'));
 
-  /// Obtiene el valor actual de k según el modo
-  // Nullable accessors used for request building and banner logic
+  /// Obtiene el valor actual de k según el modo (nullable)
   double? _getKNullable() {
-    if (widget.mode == InputMode.exacto) return toDoubleOrNullCtrl(_k);
-    if (widget.mode == InputMode.porcentaje) return toDoubleOrNullCtrl(_kPercent) == null
-        ? null
-        : (toDoubleOrNullCtrl(_kPercent)! / 100.0);
+    if (widget.mode == InputMode.exacto) {
+      return toDoubleOrNull(_k.text);
+    }
+    if (widget.mode == InputMode.porcentaje) {
+      final kPct = toDoubleOrNull(_kPercent.text);
+      return kPct == null ? null : (kPct / 100.0);
+    }
     return null;
   }
 
-  /// Obtiene el valor actual de c según el modo
+  /// Obtiene el valor actual de c según el modo (nullable)
   double? _getCNullable() {
-    if (widget.mode == InputMode.exacto) return toDoubleOrNullCtrl(_c);
-    if (widget.mode == InputMode.porcentaje) return toDoubleOrNullCtrl(_cPercent) == null
-        ? null
-        : (toDoubleOrNullCtrl(_cPercent)! / 100.0);
+    if (widget.mode == InputMode.exacto) {
+      return toDoubleOrNull(_c.text);
+    }
+    if (widget.mode == InputMode.porcentaje) {
+      final cPct = toDoubleOrNull(_cPercent.text);
+      return cPct == null ? null : (cPct / 100.0);
+    }
     return null;
   }
 
   ComputeRequest _buildRequest() {
     final vth = double.parse(_vth.text.replaceAll(',', '.'));
     final rth = double.parse(_rth.text.replaceAll(',', '.'));
-    // Parse optionals to null if empty
-    final double? k = toDoubleOrNullCtrl(_k);
-    final double? kPercent = toDoubleOrNullCtrl(_kPercent);
-    final double? c = toDoubleOrNullCtrl(_c);
-    final double? cPercent = toDoubleOrNullCtrl(_cPercent);
-    final double? pMinW = toDoubleOrNullCtrl(_pMinW);
+    
+    // Parse optionals to null if empty using null-safe helpers
+    final double? k = toDoubleOrNull(_k.text);
+    final double? kPercent = toDoubleOrNull(_kPercent.text);
+    final double? c = toDoubleOrNull(_c.text);
+    final double? cPercent = toDoubleOrNull(_cPercent.text);
+    final double? pMinW = toDoubleOrNull(_pMinW.text);
 
     switch (widget.mode) {
       case InputMode.exacto:
@@ -265,8 +271,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
     final showExact = widget.mode == InputMode.exacto;
     final showPercent = widget.mode == InputMode.porcentaje;
 
-    return AppScaffold(
-      title: '',
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: LayoutBuilder(
         builder: (context, c) {
           final isWide = c.maxWidth >= 900;

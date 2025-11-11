@@ -23,8 +23,18 @@ class ComputeRepository {
       return await _mock.compute(req);
     }
     
-    // Usa API real
-    final res = await _dio.post(ApiEndpoints.compute, data: req.toJson());
+    // Usa API real - omitir campos nulos en el payload
+    final body = <String, dynamic>{
+      'vth': req.vth,
+      'rth': req.rth,
+      if (req.k != null) 'k': req.k,
+      if (req.kPercent != null) 'kPercent': req.kPercent,
+      if (req.c != null) 'c': req.c,
+      if (req.cPercent != null) 'cPercent': req.cPercent,
+      if (req.pMinW != null) 'pMinW': req.pMinW,
+    };
+    
+    final res = await _dio.post(ApiEndpoints.compute, data: body);
     return ComputeResponse.fromJson(res.data as Map<String, dynamic>);
   }
 

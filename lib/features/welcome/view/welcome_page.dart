@@ -1,6 +1,5 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import '../../../core/widgets/app_scaffold.dart';
 import '../widgets/intro_teorema_card.dart';
 import '../widgets/about_app_card.dart';
 import '../widgets/circuit_reference_card.dart';
@@ -10,8 +9,7 @@ class WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: 'NPStudio',
+    return Scaffold(
       body: LayoutBuilder(
         builder: (context, c) {
           final isWide = c.maxWidth >= 1024;
