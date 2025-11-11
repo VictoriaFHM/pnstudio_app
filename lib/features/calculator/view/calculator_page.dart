@@ -117,8 +117,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   bool isEmpty(String? s) => s == null || s.trim().isEmpty;
 
-  double? toDoubleOrNullCtrl(TextEditingController c) =>
-      isEmpty(c.text) ? null : double.tryParse(c.text.trim().replaceAll(',', '.'));
+  double? toDoubleOrNull(String? text) {
+    if (isEmpty(text)) return null;
+    return double.tryParse(text!.trim().replaceAll(',', '.'));
+  }
 
   /// Obtiene el valor actual de k según el modo (nullable)
   double? _getKNullable() {
@@ -179,28 +181,28 @@ class _CalculatorPageState extends State<CalculatorPage> {
     });
 
     try {
-      final ex1 = Validators.mutuallyExclusive(
-        _k.text,
-        _kPercent.text,
-        'k',
-        'k%',
-      );
-      final ex2 = Validators.mutuallyExclusive(
-        _c.text,
-        _cPercent.text,
-        'c',
-        'c%',
-      );
-      if (ex1 != null || ex2 != null) {
+      // Validar que k/k% sean mutualmente excluyentes pero uno obligatorio
+      final kError = validateKOneOf(_k.text, _kPercent.text);
+      if (kError != null) {
         setState(() {
           _loading = false;
-          _error = ex1 ?? ex2;
+          _error = kError;
         });
         return;
       }
 
+      // Validar que c/c% sean mutualmente excluyentes (ambos opcionales)
+      final cError = validateCOneOf(_c.text, _cPercent.text);
+      if (cError != null) {
+        setState(() {
+          _loading = false;
+          _error = cError;
+        });
+        return;
+      }
+
+      // Validar el formulario (Vth, Rth, rangos de k, c, pMinW)
       if (!_formKey.currentState!.validate()) {
-        // focus first invalid field
         _focusFirstInvalid();
         setState(() => _loading = false);
         return;
