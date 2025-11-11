@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 const List<Map<String, String>> _sectors = [
   {
@@ -164,6 +165,41 @@ class SectorGuidePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              // Spacer before action
+              const SizedBox(height: 24),
+
+              // Centered "Calcular" button (max width 300)
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () {
+                        // Navigate to the calculator in porcentaje mode so the user can
+                        // enter k%/c% and view the graphs. The router understands
+                        // the query parameter `mode=percent`.
+                        // Use GoRouter's context extension to push the route with query
+                        // parameters. This will open the calculator screen in porcentaje mode.
+                        context.push('/calc?mode=percent');
+                      },
+                      child: const Text(
+                        'Calcular',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           );
         },
