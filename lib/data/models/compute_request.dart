@@ -7,9 +7,12 @@ class ComputeRequest {
   final double vth;
   final double rth;
   final double? k;
+  @JsonKey(includeIfNull: false)
   final double? kPercent;
   final double? c;
+  @JsonKey(includeIfNull: false)
   final double? cPercent;
+  @JsonKey(includeIfNull: false)
   final double? pMinW;
 
   const ComputeRequest({
@@ -27,5 +30,16 @@ class ComputeRequest {
       _$ComputeRequestFromJson(json);
 
   // Para enviar al backend
-  Map<String, dynamic> toJson() => _$ComputeRequestToJson(this);
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> m = {
+      'vth': vth,
+      'rth': rth,
+    };
+    if (k != null) m['k'] = k;
+    if (kPercent != null) m['kPercent'] = kPercent;
+    if (c != null) m['c'] = c;
+    if (cPercent != null) m['cPercent'] = cPercent;
+    if (pMinW != null) m['pMinW'] = pMinW;
+    return m;
+  }
 }

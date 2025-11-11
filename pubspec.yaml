@@ -34,6 +34,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/data/
     - assets/lotties/
 
   # Si aún no tienes las fuentes, puedes comentar este bloque.

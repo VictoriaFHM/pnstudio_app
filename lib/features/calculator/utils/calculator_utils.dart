@@ -5,8 +5,14 @@ bool isEmpty(String? s) => s == null || s.trim().isEmpty;
 
 /// Convierte un TextEditingController a double o null (null-safe)
 double? toDoubleOrNull(String? text) {
-  if (isEmpty(text)) return null;
-  return double.tryParse(text!.trim().replaceAll(',', '.'));
+  // Use shared validator helper if available to normalize parsing
+  try {
+    // Importing Validators here would create a cycle in some setups; prefer local parse
+    if (isEmpty(text)) return null;
+    return double.tryParse(text!.trim().replaceAll(',', '.'));
+  } catch (_) {
+    return null;
+  }
 }
 
 /// Valida que k esté en rango (0, 1)
@@ -23,7 +29,7 @@ String? validateKPorcentaje(String? v) {
   if (v == null || v.trim().isEmpty) return null;
   final x = toDoubleOrNull(v);
   if (x == null) return 'Número inválido';
-  if (x <= 0 || x > 100) return 'k% debe estar entre 0 y 100 (exclusivo en 0)';
+  if (x < 0.01 || x > 99.9999) return 'k% debe estar entre 0.01 y 99.9999';
   return null;
 }
 
@@ -41,7 +47,7 @@ String? validateCPorcentaje(String? v) {
   if (v == null || v.trim().isEmpty) return null; // c% es opcional
   final x = toDoubleOrNull(v);
   if (x == null) return 'Número inválido';
-  if (x <= 0 || x > 100) return 'c% debe estar entre 0 y 100 (exclusivo en 0)';
+  if (x < 0.01 || x > 100.0) return 'c% debe estar entre 0.01 y 100';
   return null;
 }
 

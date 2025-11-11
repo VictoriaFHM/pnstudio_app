@@ -34,9 +34,23 @@ class ModeSelectPage extends StatelessWidget {
           runSpacing: 20,
           alignment: WrapAlignment.center,
           children: [
-            chip('Porcentajes (k%, c%)', Icons.percent, InputMode.porcentaje),
-            chip('Valores exactos (k, c)', Icons.tune, InputMode.exacto),
-            chip('Básico (Vth, Rth, Pmin)', Icons.flash_on, InputMode.basico),
+            // Show only the porcentajes option. Keep the other chips in the tree but hidden.
+            InkWell(
+              onTap: () => context.push('/calc?mode=percent'),
+              borderRadius: BorderRadius.circular(20),
+              child: Chip(
+                avatar: const Icon(Icons.percent),
+                label: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text('Porcentajes (k%, c%)', style: t.titleMedium),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+
+            // Hidden but kept in widget tree
+            Offstage(offstage: true, child: chip('Valores exactos (k, c)', Icons.tune, InputMode.exacto)),
+            Offstage(offstage: true, child: chip('Básico (Vth, Rth, Pmin)', Icons.flash_on, InputMode.basico)),
           ],
         ),
       ),

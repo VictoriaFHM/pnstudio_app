@@ -45,7 +45,12 @@ class _ChartContent extends StatelessWidget {
     // Generamos 200+ puntos entre rlMin y rlMax para mayor precisión
     // Asumimos que P tiene un máximo alrededor de rlMin + (rlMax - rlMin)/2
     final numPoints = 200;
-    final step = (rlMax - rlMin) / (numPoints - 1);
+    final range = rlMax - rlMin;
+    if (range <= 0) {
+      // Degenerate range: produce a single point
+      return [FlSpot(rlMin, pmax)];
+    }
+    final step = range / (numPoints - 1);
     final spots = <FlSpot>[];
     
     for (int i = 0; i < numPoints; i++) {
@@ -54,7 +59,7 @@ class _ChartContent extends StatelessWidget {
       // P(RL) ≈ Pmax * (1 - ((RL - Rth_equiv)^2 / maxDist))
       // Para simplificar: asumimos que el máximo está en el punto medio del rango
       final distFromMax = (rl - (rlMin + rlMax) / 2).abs();
-      final maxDist = (rlMax - rlMin) / 2;
+      final maxDist = range / 2;
       final p = pmax * (1 - (distFromMax / maxDist) * (distFromMax / maxDist)).clamp(0, 1);
       spots.add(FlSpot(rl, p));
     }

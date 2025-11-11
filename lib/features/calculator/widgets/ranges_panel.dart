@@ -71,35 +71,28 @@ class RangesPanel extends StatelessWidget {
                 Text('Resultados', style: titleStyle),
                 const SizedBox(height: 8),
 
-                // Feasible banner (thinner) — use theme colors, no opacity
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: resp.feasible
-                        ? theme.colorScheme.primaryContainer
-                        : theme.colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: resp.feasible
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.error,
-                      width: 1.0,
+                    // Compact feasibility banner on top
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: resp.feasible
+                            ? theme.colorScheme.primaryContainer
+                            : theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: resp.feasible ? theme.colorScheme.primary : theme.colorScheme.error,
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Text(
+                        'Factible: ${resp.feasible ? "Sí" : "No"}',
+                        style: textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: resp.feasible ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onErrorContainer,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Factible: ${resp.feasible ? "Sí" : "No"}',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: resp.feasible
-                          ? theme.colorScheme.onPrimaryContainer
-                          : theme.colorScheme.onErrorContainer,
-                    ),
-                  ),
-                ),
 
                 const SizedBox(height: 10),
 
@@ -108,44 +101,27 @@ class RangesPanel extends StatelessWidget {
                   builder: (context, constraints) {
                     // final width = constraints.maxWidth; // not needed here
 
-                    // Helper to create a mini chip
+                    // Helper to create a mini chip (homogeneous size)
                     Widget mini(String text) => _MiniChip(text);
 
                     // Cells for rows
-                    final pmaxCell = mini(
-                      'Pmax [W]: ${_fmtNum(resp.pmax, frac: 4)}',
-                    );
-                    final pminCell = mini(
-                      'P min [W]: ${_fmtNum(resp.pMin, frac: 4)}',
-                    );
-                    final pRecCell = resp.pAtRec != null
-                        ? mini(
-                            'P recomendado [W]: ${_fmtNum(resp.pAtRec, frac: 4)}',
-                          )
-                        : const SizedBox.shrink();
+                    // POTENCIAS
+                    final pmaxCell = mini('Pmax [W]: ${_fmtNum(resp.pmax, frac: 4)}');
+                    final pminCell = mini('P min [W]: ${_fmtNum(resp.pMin, frac: 4)}');
+                    final pRecCell = resp.pAtRec != null ? mini('P recomendado [W]: ${_fmtNum(resp.pAtRec, frac: 4)}') : const SizedBox.shrink();
 
-                    final etaMaxCell = mini('η max: ${fmtEtaPct(resp.etaMax)}');
-                    final etaMinCell = mini('η min: ${fmtEtaPct(resp.etaMin)}');
-                    final etaRecCell = resp.etaAtRec != null
-                        ? mini('η recomendado: ${fmtEtaPct(resp.etaAtRec!)}')
-                        : const SizedBox.shrink();
+          // EFICIENCIAS (percent with 1 decimal)
+          final etaMaxCell = mini('η max: ${fmtEtaPct(resp.etaMax)}');
+          final etaMinCell = mini('η min: ${fmtEtaPct(resp.etaMin)}');
+          final etaRecCell = resp.etaAtRec != null ? mini('η recomendado: ${fmtEtaPct(resp.etaAtRec!)}') : const SizedBox.shrink();
 
-                    final rlMaxCell = mini(
-                      'RL max [Ω]: ${_fmtNum(resp.rlMax)}',
-                    );
-                    final rlMinCell = mini(
-                      'RL min [Ω]: ${_fmtNum(resp.rlMin)}',
-                    );
-                    final rlRecCell = resp.recommendedRl != null
-                        ? mini(
-                            'RL recomendado [Ω]: ${_fmtNum(resp.recommendedRl)}',
-                          )
-                        : const SizedBox.shrink();
+                    // RESISTENCIAS
+                    final rlMaxCell = mini('RL max [Ω]: ${_fmtNum(resp.rlMax)}');
+                    final rlMinCell = mini('RL min [Ω]: ${_fmtNum(resp.rlMin)}');
+                    final rlRecCell = resp.recommendedRl != null ? mini('RL recomendado [Ω]: ${_fmtNum(resp.recommendedRl)}') : const SizedBox.shrink();
 
-                    // Pmax(k) row
-                    final pMaxKChip = mini(
-                      'P max (por k) [W]: ${_fmtNum(resp.pMaxByK, frac: 4)}',
-                    );
+                    // Pmax(k) row (always present)
+                    final pMaxKChip = mini('P max (por k) [W]: ${_fmtNum(resp.pMaxByK, frac: 4)}');
 
                     // Short explanation
                     final explanation = Container(
@@ -166,107 +142,49 @@ class RangesPanel extends StatelessWidget {
                     // Build Table rows
                     final rows = <TableRow>[];
 
-                    // Header row
-                    rows.add(
-                      TableRow(
-                        children: [
-                          _HeaderCellCompact('POTENCIAS', t),
-                          _HeaderCellCompact('EFICIENCIAS', t),
-                          _HeaderCellCompact('RESISTENCIAS', t),
-                        ],
-                      ),
-                    );
+                    // Header row (equal width columns) — wrap contents in TableCell to avoid ParentDataWidget errors
+                    rows.add(TableRow(children: [
+                      TableCell(child: _HeaderCellCompact('POTENCIAS', t)),
+                      TableCell(child: _HeaderCellCompact('EFICIENCIAS', t)),
+                      TableCell(child: _HeaderCellCompact('RESISTENCIAS', t)),
+                    ]));
 
-                    // Maximos
-                    rows.add(
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 8),
-                            child: Center(child: pmaxCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 8),
-                            child: Center(child: etaMaxCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 8),
-                            child: Center(child: rlMaxCell),
-                          ),
-                        ],
-                      ),
-                    );
+                    // Maximos row
+                    rows.add(TableRow(children: [
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 8, bottom: 8), child: Center(child: pmaxCell))),
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 8, bottom: 8), child: Center(child: etaMaxCell))),
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 8, bottom: 8), child: Center(child: rlMaxCell))),
+                    ]));
 
-                    // Minimos
-                    rows.add(
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6, bottom: 6),
-                            child: Center(child: pminCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6, bottom: 6),
-                            child: Center(child: etaMinCell),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6, bottom: 6),
-                            child: Center(child: rlMinCell),
-                          ),
-                        ],
-                      ),
-                    );
+                    // Minimos row
+                    rows.add(TableRow(children: [
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 6, bottom: 6), child: Center(child: pminCell))),
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 6, bottom: 6), child: Center(child: etaMinCell))),
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 6, bottom: 6), child: Center(child: rlMinCell))),
+                    ]));
 
                     // Recomended row (only if any exists)
                     if (hasRecommended) {
-                      rows.add(
-                        TableRow(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6, bottom: 6),
-                              child: Center(child: pRecCell),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6, bottom: 6),
-                              child: Center(child: etaRecCell),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6, bottom: 6),
-                              child: Center(child: rlRecCell),
-                            ),
-                          ],
-                        ),
-                      );
+                      rows.add(TableRow(children: [
+                        TableCell(child: Padding(padding: const EdgeInsets.only(top: 6, bottom: 6), child: Center(child: pRecCell))),
+                        TableCell(child: Padding(padding: const EdgeInsets.only(top: 6, bottom: 6), child: Center(child: etaRecCell))),
+                        TableCell(child: Padding(padding: const EdgeInsets.only(top: 6, bottom: 6), child: Center(child: rlRecCell))),
+                      ]));
                     }
 
                     // Pmax(k) row: left cell chip, right cells explanation (spanned)
                     // pMaxByK is always present in ComputeResponse; show the row
-                    {
-                      rows.add(
-                        TableRow(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8, bottom: 8),
-                              child: Center(child: pMaxKChip),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8, bottom: 8),
-                              child: TableCell(
-                                verticalAlignment:
-                                    TableCellVerticalAlignment.top,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                  ),
-                                  child: explanation,
-                                ),
-                              ),
-                            ),
-                            const SizedBox.shrink(), // empty since explanation visually spans cols 1..2
-                          ],
+                    rows.add(TableRow(children: [
+                      TableCell(child: Padding(padding: const EdgeInsets.only(top: 8, bottom: 8), child: Center(child: pMaxKChip))),
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.top,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 8),
+                          child: Container(padding: const EdgeInsets.symmetric(horizontal: 6), child: explanation),
                         ),
-                      );
-                    }
+                      ),
+                      TableCell(child: const SizedBox.shrink()),
+                    ]));
 
                     return Table(
                       columnWidths: const {
@@ -324,18 +242,22 @@ class _MiniChip extends StatelessWidget {
     final theme = Theme.of(context);
     final t = theme.textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      constraints: const BoxConstraints(minHeight: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceVariant, // active background
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
-      child: Text(
-        label,
-        style: t.labelLarge?.copyWith(
-          fontSize: 13,
-          height: 1.15,
-          color: theme.colorScheme.onSurfaceVariant,
+      child: DefaultTextStyle(
+        style: t.labelLarge?.copyWith(fontSize: 13, height: 1.15, color: theme.colorScheme.onSurfaceVariant) ?? const TextStyle(fontSize: 13),
+        child: Center(
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
     );

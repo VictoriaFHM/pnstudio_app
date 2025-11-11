@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show AsyncValue;
+import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/validators.dart';
-import '../utils/calculator_utils.dart';
+// utils moved parsing into local helpers
 
 import '../../mode_select/models/input_mode.dart';
 import '../../../data/repositories/compute_repository.dart';
@@ -117,18 +119,20 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   bool isEmpty(String? s) => s == null || s.trim().isEmpty;
 
-  double? toDoubleOrNull(String? text) {
-    if (isEmpty(text)) return null;
-    return double.tryParse(text!.trim().replaceAll(',', '.'));
+  // Helper de parseo seguro solicitado
+  double? _toDoubleOrNull(String s) {
+    final t = s.trim();
+    if (t.isEmpty) return null;
+    return double.tryParse(t.replaceAll(',', '.'));
   }
 
   /// Obtiene el valor actual de k según el modo (nullable)
   double? _getKNullable() {
     if (widget.mode == InputMode.exacto) {
-      return toDoubleOrNull(_k.text);
+      return _toDoubleOrNull(_k.text);
     }
     if (widget.mode == InputMode.porcentaje) {
-      final kPct = toDoubleOrNull(_kPercent.text);
+      final kPct = _toDoubleOrNull(_kPercent.text);
       return kPct == null ? null : (kPct / 100.0);
     }
     return null;
@@ -137,41 +141,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
   /// Obtiene el valor actual de c según el modo (nullable)
   double? _getCNullable() {
     if (widget.mode == InputMode.exacto) {
-      return toDoubleOrNull(_c.text);
+      return _toDoubleOrNull(_c.text);
     }
     if (widget.mode == InputMode.porcentaje) {
-      final cPct = toDoubleOrNull(_cPercent.text);
+      final cPct = _toDoubleOrNull(_cPercent.text);
       return cPct == null ? null : (cPct / 100.0);
     }
     return null;
   }
 
-  ComputeRequest _buildRequest() {
-    final vth = double.parse(_vth.text.replaceAll(',', '.'));
-    final rth = double.parse(_rth.text.replaceAll(',', '.'));
-    
-    // Parse optionals to null if empty using null-safe helpers
-    final double? k = toDoubleOrNull(_k.text);
-    final double? kPercent = toDoubleOrNull(_kPercent.text);
-    final double? c = toDoubleOrNull(_c.text);
-    final double? cPercent = toDoubleOrNull(_cPercent.text);
-    final double? pMinW = toDoubleOrNull(_pMinW.text);
-
-    switch (widget.mode) {
-      case InputMode.exacto:
-        return ComputeRequest(vth: vth, rth: rth, k: k, c: c, pMinW: pMinW);
-      case InputMode.porcentaje:
-        return ComputeRequest(
-          vth: vth,
-          rth: rth,
-          kPercent: kPercent,
-          cPercent: cPercent,
-          pMinW: pMinW,
-        );
-      case InputMode.basico:
-        return ComputeRequest(vth: vth, rth: rth, pMinW: pMinW);
-    }
-  }
+  // _buildRequest removed: building ComputeRequest now performed inline in _onSubmit
 
   Future<void> _onSubmit() async {
     setState(() {
@@ -181,86 +160,69 @@ class _CalculatorPageState extends State<CalculatorPage> {
     });
 
     try {
-      // Validar que k/k% sean mutualmente excluyentes pero uno obligatorio
-      final kError = validateKOneOf(_k.text, _kPercent.text);
-      if (kError != null) {
-        setState(() {
-          _loading = false;
-          _error = kError;
-        });
-        return;
-      }
-
-      // Validar que c/c% sean mutualmente excluyentes (ambos opcionales)
-      final cError = validateCOneOf(_c.text, _cPercent.text);
-      if (cError != null) {
-        setState(() {
-          _loading = false;
-          _error = cError;
-        });
-        return;
-      }
-
-      // Validar el formulario (Vth, Rth, rangos de k, c, pMinW)
+      // Validate form fields first
       if (!_formKey.currentState!.validate()) {
-        _focusFirstInvalid();
         setState(() => _loading = false);
         return;
       }
 
-      final req = _buildRequest();
-      final res = await _computeRepo.compute(req);
-      setState(() => _result = res);
+      // Basic required parsing (validators ensured non-null)
+      final vth = _toDoubleOrNull(_vth.text)!;
+      final rth = _toDoubleOrNull(_rth.text)!;
+
+      // For percentage mode validate k% exists
+      if (widget.mode == InputMode.porcentaje) {
+        // Validators ensure both k% and c% are present and in range for this screen
+        final kPctNullable = _toDoubleOrNull(_kPercent.text);
+        final cPctNullable = _toDoubleOrNull(_cPercent.text);
+        if (kPctNullable == null || cPctNullable == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa eficiencia (%) y potencia (%)')));
+          setState(() => _loading = false);
+          return;
+        }
+
+        // Build request with ONLY the required fields for porcentaje mode
+  final req = ComputeRequest(vth: vth, rth: rth, kPercent: kPctNullable, cPercent: cPctNullable);
+        final res = await _computeRepo.compute(req);
+        setState(() => _result = res);
+      } else if (widget.mode == InputMode.exacto) {
+        // exact mode: parse k and c as exact values; require one of them? we rely on existing validators
+  final kVal = _toDoubleOrNull(_k.text);
+  final cVal = _toDoubleOrNull(_c.text);
+  final pMin = _toDoubleOrNull(_pMinW.text);
+
+        // If both c and pMin missing, backend requires at least one; enforce here
+        if (cVal == null && pMin == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes ingresar c o P mínima (W)')));
+          setState(() => _loading = false);
+          return;
+        }
+
+        final req = ComputeRequest(vth: vth, rth: rth, k: kVal, c: cVal, pMinW: pMin);
+        final res = await _computeRepo.compute(req);
+        setState(() => _result = res);
+      } else {
+        // basico
+  final pMin = _toDoubleOrNull(_pMinW.text);
+        if (pMin == null) {
+          // backend requires c/cPercent or pMinW; here ask user to provide pMinW
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes ingresar c% o P mínima (W)')));
+          setState(() => _loading = false);
+          return;
+        }
+        final req = ComputeRequest(vth: vth, rth: rth, pMinW: pMin);
+        final res = await _computeRepo.compute(req);
+        setState(() => _result = res);
+      }
     } catch (e) {
+      // Surface backend validation errors clearly
       setState(() => _error = e.toString());
     } finally {
       setState(() => _loading = false);
     }
   }
 
-  void _focusFirstInvalid() {
-    // Check Vth
-    if (_vth.text.trim().isEmpty || double.tryParse(_vth.text.replaceAll(',', '.')) == null) {
-      FocusScope.of(context).requestFocus(_vthFocus);
-      return;
-    }
-    // Check Rth
-    if (_rth.text.trim().isEmpty || double.tryParse(_rth.text.replaceAll(',', '.')) == null) {
-      FocusScope.of(context).requestFocus(_rthFocus);
-      return;
-    }
-
-    // Check k / k% one-of requirement depending on mode
-    if (widget.mode == InputMode.exacto) {
-      final hasK = _k.text.trim().isNotEmpty;
-      final hasKp = _kPercent.text.trim().isNotEmpty;
-      if (!hasK && !hasKp) {
-        FocusScope.of(context).requestFocus(_kFocus);
-        return;
-      }
-      if (hasK) {
-        final ok = double.tryParse(_k.text.replaceAll(',', '.')) != null;
-        if (!ok) {
-          FocusScope.of(context).requestFocus(_kFocus);
-          return;
-        }
-      }
-    } else if (widget.mode == InputMode.porcentaje) {
-      final hasK = _k.text.trim().isNotEmpty;
-      final hasKp = _kPercent.text.trim().isNotEmpty;
-      if (!hasK && !hasKp) {
-        FocusScope.of(context).requestFocus(_kPercentFocus);
-        return;
-      }
-      if (hasKp) {
-        final ok = double.tryParse(_kPercent.text.replaceAll(',', '.')) != null;
-        if (!ok) {
-          FocusScope.of(context).requestFocus(_kPercentFocus);
-          return;
-        }
-      }
-    }
-  }
+  // _focusFirstInvalid removed — validation handled inline in _onSubmit using SnackBars
 
   AsyncValue<ComputeResponse?> get _rangesAsync {
     if (_loading) return const AsyncValue.loading();
@@ -302,7 +264,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   focusNode: _vthFocus,
                   decoration: const InputDecoration(
                     labelText: 'Vth (V) *',
-                    helperText: 'Obligatorio',
+                    helperText: 'Obligatorio — > 0',
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Campo obligatorio';
@@ -320,7 +282,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   focusNode: _rthFocus,
                   decoration: const InputDecoration(
                     labelText: 'Rth (Ω) *',
-                    helperText: 'Obligatorio',
+                    helperText: 'Obligatorio — > 0',
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Campo obligatorio';
@@ -338,9 +300,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     controller: _k,
                     focusNode: _kFocus,
                     enabled: _kEnabled,
-                    decoration: const InputDecoration(
-                      labelText: 'k (eficiencia, 0..1)',
-                    ),
+                      decoration: const InputDecoration(
+                        labelText: 'k (eficiencia, 0..1)',
+                        helperText: 'Rango: 0..1',
+                      ),
                     validator: (v) {
                       final otherHas = _kPercent.text.trim().isNotEmpty;
                       if (v == null || v.trim().isEmpty) {
@@ -359,6 +322,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     enabled: _cEnabled,
                     decoration: const InputDecoration(
                       labelText: 'c (potencia, 0..1)',
+                      helperText: 'Opcional — rango: 0.01..1',
                     ),
                     validator: (v) {
                       // optional: if empty OK; if provided validate range
@@ -376,16 +340,17 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     focusNode: _kPercentFocus,
                     enabled: _kPercentEnabled,
                     decoration: const InputDecoration(
-                      labelText: 'k% (eficiencia, 0..100)',
+                      labelText: 'k% (eficiencia) *',
+                      helperText: 'Rango: 0.01 .. 99.9999%',
+                      suffixText: '%',
                     ),
                     validator: (v) {
-                      final otherHas = _k.text.trim().isNotEmpty;
-                      if (v == null || v.trim().isEmpty) {
-                        if (!otherHas) return 'Campo obligatorio';
-                        return null;
-                      }
-                      return Validators.kPercentRange(v);
+                      final x = _toDoubleOrNull(v ?? '');
+                      if (x == null) return 'k% es obligatorio';
+                      if (x <= 0.01 || x > 99.9999) return 'k% debe ser (0.01, 99.9999]';
+                      return null;
                     },
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -395,26 +360,39 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     focusNode: _cPercentFocus,
                     enabled: _cPercentEnabled,
                     decoration: const InputDecoration(
-                      labelText: 'c% (potencia, 0..100)',
+                      labelText: 'c% (potencia) *',
+                      helperText: 'Rango: 0.01 .. 100%',
+                      suffixText: '%',
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      return Validators.cPercentRange(v);
+                      final x = _toDoubleOrNull(v ?? '');
+                      if (x == null) return 'c% es obligatorio';
+                      if (x <= 0.01 || x > 100) return 'c% debe ser (0.01, 100]';
+                      return null;
                     },
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                   ),
                 ],
-                TextFormField(
-                  controller: _pMinW,
-                  focusNode: _pMinWFocus,
-                  decoration: const InputDecoration(
-                    labelText: 'P mínima (W)',
-                  ),
-                  validator: Validators.nonNegative,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                // Ocultar visualmente P mínima en la pantalla de porcentajes
+                Visibility(
+                  visible: !showPercent,
+                  maintainState: true,
+                  maintainAnimation: true,
+                  maintainSize: true,
+                  child: TextFormField(
+                    controller: _pMinW,
+                    focusNode: _pMinWFocus,
+                    decoration: const InputDecoration(
+                      labelText: 'P mínima (W)',
+                      helperText: 'Opcional — ≥ 0 W',
+                    ),
+                    validator: Validators.nonNegative,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -473,6 +451,17 @@ class _CalculatorPageState extends State<CalculatorPage> {
               
               // Resultados
               RangesPanel(result: _rangesAsync),
+              const SizedBox(height: 12),
+              if (_result != null)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => context.push('/thanks'),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      child: Text('Terminar'),
+                    ),
+                  ),
+                ),
             ],
           );
 

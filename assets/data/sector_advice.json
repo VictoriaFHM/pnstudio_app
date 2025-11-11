@@ -1,0 +1,30 @@
+[
+  {
+    "sector": "Data Center",
+    "causasTecnicas": "Pérdidas en PSU/AC-DC y enfriamiento intensivo; mejora con virtualización y enfriamiento líquido.",
+    "eficiencia": 0.9,
+    "potencia": 60.0,
+    "imageAsset": "assets/images/sector_dc.png"
+  },
+  {
+    "sector": "Fábricas de Semiconductores (Fabs)",
+    "causasTecnicas": "Litografía/deposición con vacío, plasma y hornos; condiciones ambientales estrictas elevan pérdidas.",
+    "eficiencia": 0.33,
+    "potencia": 30.0,
+    "imageAsset": "assets/images/sector_fabs.png"
+  },
+  {
+    "sector": "Manufactura de Baterías",
+    "causasTecnicas": "Procesos electroquímicos y térmicos (secado de electrodos, hornos, recubrimientos); HVAC y equipos de secado.",
+    "eficiencia": 0.5,
+    "potencia": 50.0,
+    "imageAsset": "assets/images/sector_battery.png"
+  },
+  {
+    "sector": "Telecomunicaciones",
+    "causasTecnicas": "Amplificación RF: solo una fracción se convierte en ondas EM; límites físicos de transistores y disipación térmica.",
+    "eficiencia": 0.78,
+    "potencia": 55.0,
+    "imageAsset": "assets/images/sector_telco.png"
+  }
+]
