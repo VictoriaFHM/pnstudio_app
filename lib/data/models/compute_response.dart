@@ -17,7 +17,7 @@ class ComputeResponse {
   final double? pAtRec;
 
   const ComputeResponse({
-    required this.feasible,
+    this.feasible = true, // ✅ Valor por defecto si viene null
     required this.pmax,
     required this.rlMin,
     required this.rlMax,

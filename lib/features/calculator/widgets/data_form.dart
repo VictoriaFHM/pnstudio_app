@@ -163,8 +163,9 @@ class _DataFormState extends State<DataForm> {
                   onPressed: widget.busy
                       ? null
                       : () {
-                          if (!(_formKey.currentState?.validate() ?? false))
+                          if (!(_formKey.currentState?.validate() ?? false)) {
                             return;
+                          }
                           final vth = double.parse(_vth.text);
                           final rth = double.parse(_rth.text);
                           final k = _k.text.isEmpty

@@ -8,7 +8,7 @@ part of 'compute_response.dart';
 
 ComputeResponse _$ComputeResponseFromJson(Map<String, dynamic> json) =>
     ComputeResponse(
-      feasible: json['feasible'] as bool,
+      feasible: json['feasible'] as bool? ?? true,
       pmax: (json['pmax'] as num).toDouble(),
       rlMin: (json['rlMin'] as num).toDouble(),
       rlMax: (json['rlMax'] as num).toDouble(),

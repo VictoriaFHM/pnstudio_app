@@ -1,11 +1,10 @@
 // lib/core/constants/api_endpoints.dart
-class ApiEndpoints {
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:5230',
-  );
+import '../../env/env.dart';
 
-  // Paths
+class ApiEndpoints {
+  static String get baseUrl => Env.baseUrl;
+
+  // Paths (no duplicate /api)
   static const String compute = '/api/Compute';
   static const String computeExample = '/api/Compute/example';
   static const String calculations = '/api/Calculations';

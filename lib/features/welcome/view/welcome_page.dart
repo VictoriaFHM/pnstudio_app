@@ -11,10 +11,10 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'PnStudio',
+      title: 'NPStudio',
       body: LayoutBuilder(
         builder: (context, c) {
-          final isWide = c.maxWidth >= 900;
+          final isWide = c.maxWidth >= 1024;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -25,29 +25,32 @@ class WelcomePage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-                // Dos tarjetas lado a lado en pantallas anchas; en columna en móvil
+                // Dos tarjetas lado a lado en pantallas anchas (≥1024px); en columna en móvil
                 isWide
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Expanded(child: IntroTeoremaCard()),
-                          SizedBox(width: 16),
-                          Expanded(child: AboutAppCard()),
-                        ],
+                    ? SizedBox(
+                        height: 280,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: const [
+                            Expanded(child: IntroTeoremaCard()),
+                            SizedBox(width: 20),
+                            Expanded(child: AboutAppCard()),
+                          ],
+                        ),
                       )
                     : const Column(
                         children: [
                           IntroTeoremaCard(),
-                          SizedBox(height: 12),
+                          SizedBox(height: 16),
                           AboutAppCard(),
                         ],
                       ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
 
                 const CircuitReferenceCard(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 Center(
                   child: ElevatedButton(

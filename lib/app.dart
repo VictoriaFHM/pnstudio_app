@@ -8,7 +8,7 @@ class PnStudioApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'PnStudio',
+      title: 'NP Studio',
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,

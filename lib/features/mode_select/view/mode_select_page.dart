@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../models/input_mode.dart';
 import 'package:flutter/material.dart';
-import 'package:pnstudio_app/features/mode_select/models/input_mode.dart';
 
 class ModeSelectPage extends StatelessWidget {
   const ModeSelectPage({super.key});
