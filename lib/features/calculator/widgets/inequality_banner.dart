@@ -21,8 +21,8 @@ class InequalityBanner extends StatelessWidget {
 
   /// Determina qué tipo de banner mostrar
   (BannerType type, String text) _getBannerContent() {
-    // Always render the inequality with 3 decimals
-    final inequality = 'RL ∈ [${rlMin.toStringAsFixed(3)}, ${rlMax.toStringAsFixed(3)}] Ω';
+  // Always render the inequality with 2 decimals
+  final inequality = 'RL ∈ [${rlMin.toStringAsFixed(2)}, ${rlMax.toStringAsFixed(2)}] Ω';
 
     // If not feasible, show warning message
     if (!feasible) {
@@ -46,7 +46,7 @@ class InequalityBanner extends StatelessWidget {
 
     // If k approximately equals kcrit
     if (isClose(kVal, kcrit)) {
-      return (BannerType.info, 'Única solución: RL = ${rlMin.toStringAsFixed(3)} Ω');
+      return (BannerType.info, 'Única solución: RL = ${rlMin.toStringAsFixed(2)} Ω');
     }
 
     // If k < kcrit and feasible → inequality
@@ -72,7 +72,7 @@ class InequalityBanner extends StatelessWidget {
   Color _getBorderColor(BannerType type) {
     switch (type) {
       case BannerType.success:
-        return Colors.green;
+        return const Color(0xFF799351);
       case BannerType.info:
         return Colors.blue;
       case BannerType.warning:
@@ -88,11 +88,12 @@ class InequalityBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: bgColor,
-        border: Border.all(color: borderColor, width: 2),
-        borderRadius: BorderRadius.circular(15),
+        color: bannerType == BannerType.success ? const Color(0xFFEDF2E0) : bgColor,
+        border: Border.all(color: borderColor, width: bannerType == BannerType.success ? 1.5 : 2),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: Row(
         children: [
@@ -103,15 +104,15 @@ class InequalityBanner extends StatelessWidget {
                     ? Icons.info
                     : Icons.warning,
             color: borderColor,
-            size: 28,
+            size: 20,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 14,
                     color: borderColor,
                   ),
             ),

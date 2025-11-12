@@ -9,7 +9,7 @@ class AboutAppCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -17,15 +17,13 @@ class AboutAppCard extends StatelessWidget {
             Text(
               '¿Para qué sirve esta página?',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: 10),
             Text(
-              'Aquí ingresás Vth y Rth, elegís cómo modelar pérdidas (k - eficiencia'
-              'y c - potencia, ya sea en valor directo o en porcentaje) y la app calcula: '
-              'rango de RL recomendado, potencia y eficiencia estimadas. '
-              'Luego te mostramos la gráfica P vs RL y las recomendaciones.',
+              'En esta página podés simular tu circuito equivalente de Thevenin.\n\nIngresás Vth y Rth, elegís cómo modelar las pérdidas mediante los parámetros k (eficiencia) y c (potencia disponible), y la app calcula el rango de RL que cumple con esas condiciones.\n\nLuego te mostramos la curva P vs RL y un valor recomendado de resistencia de carga para trabajar cerca de la máxima potencia con la eficiencia que fijaste.',
               textAlign: TextAlign.start,
+              style: TextStyle(fontSize: 13, height: 1.4),
             ),
           ],
         ),

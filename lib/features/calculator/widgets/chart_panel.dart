@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -13,8 +14,10 @@ class ChartPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(Gaps.lg),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -74,11 +77,11 @@ class _ChartContent extends StatelessWidget {
     
     final lines = <VerticalLine>[];
     
-    // RLmin: dashed green (Color(0xFF2E7D32)), strokeWidth 3.0
+    // RLmin: dashed marker (now styled to match requested emphasis)
     lines.add(
       VerticalLine(
         x: result!.rlMin,
-        color: const Color(0xFF2E7D32),
+        color: const Color(0xFF8C2E2E),
         strokeWidth: 3.0,
         dashArray: [4, 4],
         label: VerticalLineLabel(
@@ -87,7 +90,7 @@ class _ChartContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8),
           labelResolver: (_) => 'RLmin',
           style: const TextStyle(
-            color: Color(0xFF2E7D32),
+            color: Color(0xFF8C2E2E),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -95,11 +98,11 @@ class _ChartContent extends StatelessWidget {
       ),
     );
     
-    // RLmax: dashed red (Color(0xFFB00020)), strokeWidth 3.0
+    // RLmax: dashed marker
     lines.add(
       VerticalLine(
         x: result!.rlMax,
-        color: const Color(0xFFB00020),
+        color: const Color(0xFF8C2E2E),
         strokeWidth: 3.0,
         dashArray: [4, 4],
         label: VerticalLineLabel(
@@ -108,7 +111,7 @@ class _ChartContent extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8),
           labelResolver: (_) => 'RLmax',
           style: const TextStyle(
-            color: Color(0xFFB00020),
+            color: Color(0xFF8C2E2E),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -150,14 +153,15 @@ class _ChartContent extends StatelessWidget {
         child: Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     if (result == null) {
       return SizedBox(
         height: 260,
         child: Center(
           child: Text(
-            'Calcula primero para ver la gráfica',
-            style: Theme.of(context).textTheme.bodyMedium,
+            'Introduce los datos y presiona Calcular para generar la gráfica.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Color(0xFF707B50)),
           ),
         ),
       );
@@ -194,91 +198,124 @@ class _ChartContent extends StatelessWidget {
         // Ancho mínimo del gráfico para garantizar espaciado de ticks
         final minChartWidth = screenWidth < 500 ? 600.0 : screenWidth;
 
+        // Compute a "nice" step for bottom axis to avoid overlap (approx 8 labels)
+        final minX = result!.rlMin;
+        final maxX = result!.rlMax;
+        final dx = maxX - minX;
+        double niceStep(double x) {
+          if (x <= 0) return 1.0;
+          final p = pow(10, (log(x) / ln10).floor()).toDouble();
+          final n = x / p;
+          final m = (n <= 1) ? 1 : (n <= 2) ? 2 : (n <= 5) ? 5 : 10;
+          return m * p;
+        }
+
+        final raw = dx / 8.0;
+  final step = niceStep(raw);
+
         final chart = SizedBox(
           height: chartHeight,
           width: minChartWidth,
-          child: LineChart(
-            LineChartData(
-              minX: result!.rlMin,
-              maxX: result!.rlMax,
-              minY: 0,
-              maxY: result!.pmax * 1.1,
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 45,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toStringAsFixed(3),
-                        style: const TextStyle(fontSize: 10),
-                      );
-                    },
+          child: Container(
+            color: const Color(0xFFF7F5F0),
+            padding: const EdgeInsets.fromLTRB(8, 8, 12, 12),
+            child: LineChart(
+              LineChartData(
+                backgroundColor: const Color(0xFFF7F5F0),
+                minX: minX,
+                maxX: maxX,
+                minY: 0,
+                maxY: result!.pmax * 1.1,
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 38,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toStringAsFixed(3),
+                          style: const TextStyle(fontSize: 11),
+                        );
+                      },
+                    ),
+                    axisNameWidget: const Text('P (W)', style: TextStyle(fontSize: 11)),
+                    axisNameSize: 18,
                   ),
-                  axisNameWidget: const Text('P (W)', style: TextStyle(fontSize: 11)),
-                  axisNameSize: 18,
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toInt().toString(),
-                        style: const TextStyle(fontSize: 10),
-                      );
-                    },
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: step,
+                      getTitlesWidget: (value, meta) {
+                        // Only show labels aligned to step (avoid 233.5, etc.)
+                        final rel = (value - minX) / step;
+                        if ((rel - rel.round()).abs() > 1e-6) {
+                          return const SizedBox.shrink();
+                        }
+                        final absStep = step.abs();
+                        final decimals = absStep >= 1 ? 0 : (absStep >= 0.1 ? 1 : 2);
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            value.toStringAsFixed(decimals),
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        );
+                      },
+                    ),
+                    axisNameWidget: const Text('RL (Ω)', style: TextStyle(fontSize: 11)),
+                    axisNameSize: 18,
                   ),
-                  axisNameWidget: const Text('RL (Ω)', style: TextStyle(fontSize: 11)),
-                  axisNameSize: 18,
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
-                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  isCurved: true,
-                  spots: spots,
-                  dotData: const FlDotData(show: false),
-                  color: Colors.blue,
-                  barWidth: 2.5,
-                ),
-              ],
-              gridData: const FlGridData(show: true),
-              borderData: FlBorderData(show: true),
-              // Shaded feasible band between rlMin and rlMax (low opacity: 0.08)
-              rangeAnnotations: RangeAnnotations(
-                verticalRangeAnnotations: [
-                  VerticalRangeAnnotation(
-                    x1: result!.rlMin,
-                    x2: result!.rlMax,
-                    color: Colors.green.withValues(alpha: 0.08),
+                lineBarsData: [
+                  LineChartBarData(
+                    isCurved: true,
+                    spots: spots,
+                    dotData: const FlDotData(show: false),
+                    color: const Color(0xFF799351), // curve color (olive-ish)
+                    barWidth: 2.5,
                   ),
                 ],
-              ),
-              // Vertical marker lines
-              extraLinesData: ExtraLinesData(
-                verticalLines: _buildVerticalLines(),
-              ),
-              lineTouchData: LineTouchData(
-                enabled: true,
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((spot) {
-                      final feasible = result!.feasible &&
-                          spot.x >= result!.rlMin &&
-                          spot.x <= result!.rlMax;
-                      return LineTooltipItem(
-                        'RL: ${spot.x.toStringAsFixed(1)} Ω\nP: ${spot.y.toStringAsFixed(3)} W${feasible ? '\n(factible)' : ''}',
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      );
-                    }).toList();
-                  },
+                gridData: const FlGridData(show: true),
+                borderData: FlBorderData(show: true),
+                // Shaded feasible band between rlMin and rlMax (low opacity: 0.08)
+                rangeAnnotations: RangeAnnotations(
+                  verticalRangeAnnotations: [
+                    VerticalRangeAnnotation(
+                      x1: minX,
+                      x2: maxX,
+                      color: const Color(0xFF799351).withOpacity(0.08),
+                    ),
+                  ],
                 ),
+                // Vertical marker lines
+                extraLinesData: ExtraLinesData(
+                  verticalLines: _buildVerticalLines(),
+                ),
+                // Interactive touch tooltip: tap curve to see RL and P values
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                      return touchedSpots.map((LineBarSpot touchedSpot) {
+                        final rl = touchedSpot.x.toStringAsFixed(1);
+                        final p = touchedSpot.y.toStringAsFixed(3);
+                        return LineTooltipItem(
+                          'RL: $rl Ω\nP: $p W\n(factible)',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                  handleBuiltInTouches: true,
+                ),
+                clipData: FlClipData.none(),
               ),
             ),
           ),

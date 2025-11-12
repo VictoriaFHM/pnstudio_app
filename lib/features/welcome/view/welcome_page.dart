@@ -13,18 +13,19 @@ class WelcomePage extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, c) {
           final isWide = c.maxWidth >= 1024;
-          // card heights for desktop rows
-          const rowCardHeight = 280.0;
+          // Alturas compactas para desktop (1366x768)
+          const rowCardHeight = 220.0; // Reducido de 280
+          const imageCardHeight = 200.0; // Compacto para imágenes
 
-          Widget buildRow(Widget left, Widget right) {
+          Widget buildRow(Widget left, Widget right, {double height = rowCardHeight}) {
             if (isWide) {
               return SizedBox(
-                height: rowCardHeight,
+                height: height,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(child: left),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 16), // Reducido de 20
                     Expanded(child: right),
                   ],
                 ),
@@ -34,29 +35,29 @@ class WelcomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 left,
-                const SizedBox(height: 16),
+                const SizedBox(height: 12), // Reducido de 16
                 right,
               ],
             );
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'TEOREMA DE MÁXIMA TRANSFERENCIA DE POTENCIA',
+                  'Teorema de Máxima Transferencia de Potencia',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
-                // Top info cards (¿Qué es? / ¿Para qué sirve?)
+                // Top info cards
                 buildRow(const IntroTeoremaCard(), const AboutAppCard()),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
-                // Bottom image cards (two cards, same size)
+                // Bottom image cards
                 buildRow(
                   const _ImageCard(
                     title: 'Circuito de referencia',
@@ -66,16 +67,17 @@ class WelcomePage extends StatelessWidget {
                     title: 'P vs RL (máximo en RL = RTh)',
                     assetPath: 'assets/images/p_vs_rl.png',
                   ),
+                  height: imageCardHeight,
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
 
-                // Bottom CTA centered — open sector guide
+                // CTA Button
                 Center(
                   child: ElevatedButton(
                     onPressed: () => context.push('/guide'),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                       child: Text('Elegir eficiencia y potencia'),
                     ),
                   ),
@@ -99,8 +101,8 @@ class _ImageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -110,22 +112,25 @@ class _ImageCard extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  color: Colors.black12,
+                  color: Colors.white, // Fondo blanco uniforme
                   child: Image.asset(
                     assetPath,
                     fit: BoxFit.contain,
+                    alignment: Alignment.center,
                     errorBuilder: (context, error, stack) {
-                      // Print to console and show a simple placeholder
-                      debugPrint('No se pudo cargar la imagen');
-                      return const Center(
-                        child: Text('No se pudo cargar la imagen'),
+                      return Center(
+                        child: Text(
+                          'No se pudo cargar:\n$assetPath',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       );
                     },
                   ),

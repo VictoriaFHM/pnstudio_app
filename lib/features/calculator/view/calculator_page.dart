@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show AsyncValue;
 import 'package:go_router/go_router.dart';
+import 'dart:async';
+import 'dart:math';
 
 import '../../../core/utils/validators.dart';
 // utils moved parsing into local helpers
@@ -14,6 +16,7 @@ import '../../../data/models/compute_response.dart';
 import '../widgets/chart_panel.dart';
 import '../widgets/ranges_panel.dart';
 import '../widgets/inequality_banner.dart';
+// SectionHeader not used here because header is in the AppBar
 
 /// ✅ Ahora es StatefulWidget y recibe el modo por constructor.
 /// GoRouter la crea así: CalculatorPage(mode: mode)
@@ -54,6 +57,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
   ComputeResponse? _result;
   bool _loading = false;
   String? _error;
+
+  // Fireworks overlay controller
+  Timer? _finishTimer;
+  Timer? _fadeTimer;
+  bool _showFinishOverlay = false;
+  double _overlayOpacity = 1.0;
 
   @override
   void initState() {
@@ -100,6 +109,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   @override
   void dispose() {
+    _finishTimer?.cancel();
+    _fadeTimer?.cancel();
     _vth.dispose();
     _rth.dispose();
     _k.dispose();
@@ -222,6 +233,36 @@ class _CalculatorPageState extends State<CalculatorPage> {
     }
   }
 
+  // Show fireworks overlay for ~2.5s then fade and navigate to home ('/') clearing stack.
+  void _onFinishPressed() {
+    if (_showFinishOverlay) return;
+    // display overlay
+    setState(() {
+      _showFinishOverlay = true;
+      _overlayOpacity = 1.0;
+    });
+
+    // Cancel any existing timers
+    _finishTimer?.cancel();
+    _fadeTimer?.cancel();
+
+    // After ~2.5s start fade-out
+    _finishTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      setState(() => _overlayOpacity = 0.0);
+
+      // After fade completes, navigate home clearing stack
+      _fadeTimer = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        try {
+          context.go('/');
+        } catch (_) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/', (r) => false);
+        }
+      });
+    });
+  }
+
   // _focusFirstInvalid removed — validation handled inline in _onSubmit using SnackBars
 
   AsyncValue<ComputeResponse?> get _rangesAsync {
@@ -237,73 +278,79 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
     return Scaffold(
       appBar: AppBar(
+        // explicit back button
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
+        ),
+        // Center the title in the AppBar and remove the subtitle + divider per UI request
+        titleSpacing: 0,
+        centerTitle: true,
+        toolbarHeight: 84,
+        title: Text(
+          'Evaluación de Potencia Entregada a la Carga',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
       body: LayoutBuilder(
         builder: (context, c) {
           final isWide = c.maxWidth >= 900;
+          final isMobile = c.maxWidth < 768;
 
           final form = Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Encabezado "Datos"
-                Text(
-                  'Datos',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
+                    TextFormField(
                   controller: _vth,
                   focusNode: _vthFocus,
-                  decoration: const InputDecoration(
-                    labelText: 'Vth (V) *',
-                    helperText: 'Obligatorio — > 0',
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Campo obligatorio';
-                    final x = double.tryParse(v.replaceAll(',', '.'));
-                    if (x == null) return 'Número inválido';
-                    if (x <= 0) return 'Debe ser > 0';
-                    return null;
-                  },
+                      decoration: const InputDecoration(
+                        labelText: 'Vth (V) *',
+                        helperText: 'Ingrese un valor mayor que cero.',
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Ingrese un valor mayor que cero.';
+                        final x = double.tryParse(v.replaceAll(',', '.'));
+                        if (x == null) return 'Número inválido';
+                        if (x <= 0) return 'Ingrese un valor mayor que cero.';
+                        return null;
+                      },
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                 ),
+                    const SizedBox(height: 8),
                 TextFormField(
                   controller: _rth,
                   focusNode: _rthFocus,
-                  decoration: const InputDecoration(
-                    labelText: 'Rth (Ω) *',
-                    helperText: 'Obligatorio — > 0',
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Campo obligatorio';
-                    final x = double.tryParse(v.replaceAll(',', '.'));
-                    if (x == null) return 'Número inválido';
-                    if (x <= 0) return 'Debe ser > 0';
-                    return null;
-                  },
+                      decoration: const InputDecoration(
+                        labelText: 'Rth (Ω) *',
+                        helperText: 'Ingrese un valor mayor que cero.',
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Ingrese un valor mayor que cero.';
+                        final x = double.tryParse(v.replaceAll(',', '.'));
+                        if (x == null) return 'Número inválido';
+                        if (x <= 0) return 'Ingrese un valor mayor que cero.';
+                        return null;
+                      },
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                 ),
+                    const SizedBox(height: 8),
                 if (showExact) ...[
                   TextFormField(
                     controller: _k,
                     focusNode: _kFocus,
                     enabled: _kEnabled,
-                      decoration: const InputDecoration(
-                        labelText: 'k (eficiencia, 0..1)',
-                        helperText: 'Rango: 0..1',
-                      ),
+                          decoration: const InputDecoration(
+                            labelText: 'k (eficiencia, 0..1)',
+                            helperText: 'Rango: 0..1',
+                          ),
                     validator: (v) {
                       final otherHas = _kPercent.text.trim().isNotEmpty;
                       if (v == null || v.trim().isEmpty) {
@@ -341,7 +388,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     enabled: _kPercentEnabled,
                     decoration: const InputDecoration(
                       labelText: 'k% (eficiencia) *',
-                      helperText: 'Rango: 0.01 .. 99.9999%',
+                      helperText: 'Rango: 0.01 % – 99.99 %',
                       suffixText: '%',
                     ),
                     validator: (v) {
@@ -361,7 +408,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     enabled: _cPercentEnabled,
                     decoration: const InputDecoration(
                       labelText: 'c% (potencia) *',
-                      helperText: 'Rango: 0.01 .. 100%',
+                      helperText: 'Rango: 0.01 % – 100 %',
                       suffixText: '%',
                     ),
                     validator: (v) {
@@ -396,15 +443,24 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                FilledButton(
+                // Botón Calcular con estilo olive y radio más grande
+                ElevatedButton(
                   onPressed: _loading ? null : _onSubmit,
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      const base = Color(0xFF6E8C1A);
+                      const hover = Color(0xFF88A71D);
+                      if (states.contains(MaterialState.hovered) || states.contains(MaterialState.pressed)) return hover;
+                      return base;
+                    }),
+                    foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                    elevation: MaterialStateProperty.resolveWith<double>((states) => states.contains(MaterialState.pressed) ? 6 : 4),
+                    padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 28, vertical: 14)),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  ),
                   child: _loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Calcular'),
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Calcular', style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
@@ -417,6 +473,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
           final mainColumn = Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header moved into AppBar; keep a small top spacer
+              SizedBox(height: isMobile ? 12 : 16),
               // En pantallas anchas, formulario y gráfica lado a lado
               if (isWide)
                 Row(
@@ -435,8 +493,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 const SizedBox(height: 12),
                 ChartPanel(result: _result, loading: _loading),
               ],
-              const SizedBox(height: 16),
-              
+              const SizedBox(height: 8),
+
               // ✅ BANNER con la inecuación
               if (_result != null) ...[
                 InequalityBanner(
@@ -446,19 +504,57 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   rlMax: _result!.rlMax,
                   feasible: _result!.feasible,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
               ],
-              
+
               // Resultados
               RangesPanel(result: _rangesAsync),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               if (_result != null)
                 Center(
                   child: ElevatedButton(
-                    onPressed: () => context.push('/thanks'),
+                    onPressed: _onFinishPressed,
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.resolveWith<Color>(
+                        (states) {
+                          const base = Color(0xFF6E8C1A); // Olive green (unified)
+                          const hover = Color(0xFF5A7315); // darker olive for hover
+                          if (states
+                              .contains(MaterialState.hovered)) {
+                            return hover;
+                          }
+                          return base;
+                        },
+                      ),
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(
+                              Colors.white),
+                      elevation:
+                          MaterialStateProperty.resolveWith<double>(
+                        (states) {
+                          if (states
+                              .contains(MaterialState.hovered)) {
+                            return 8;
+                          }
+                          return 4;
+                        },
+                      ),
+                      padding: MaterialStateProperty.all<EdgeInsets>(
+                        const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 16),
+                      ),
+                    ),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      child: Text('Terminar'),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                      child: Text(
+                        'Terminar',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -468,13 +564,31 @@ class _CalculatorPageState extends State<CalculatorPage> {
           return Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: c.maxHeight),
-                  child: mainColumn,
+                physics: const ClampingScrollPhysics(),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: c.maxHeight),
+                    child: mainColumn,
+                  ),
                 ),
               ),
-              // Sticky help drawer removed (no help card '¿Para qué me sirve?')
+              // Fireworks overlay with fade-out animation
+              if (_showFinishOverlay)
+                AnimatedOpacity(
+                  opacity: _overlayOpacity,
+                  duration: const Duration(milliseconds: 300),
+                  child: AbsorbPointer(
+                    absorbing: _overlayOpacity > 0.1,
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      child: const Center(
+                        child: _FireworksParticles(),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           );
         },
@@ -482,3 +596,173 @@ class _CalculatorPageState extends State<CalculatorPage> {
     );
   }
 }
+
+// Simple fireworks particle animation widget (no Lottie dependency)
+class _FireworksParticles extends StatefulWidget {
+  const _FireworksParticles();
+
+  @override
+  State<_FireworksParticles> createState() => _FireworksParticlesState();
+}
+
+class _FireworksParticlesState extends State<_FireworksParticles>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2500),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _FireworksPainter(_controller.value),
+          size: Size.infinite,
+        );
+      },
+    );
+  }
+}
+
+class _FireworksPainter extends CustomPainter {
+  final double progress; // 0.0 to 1.0
+  final List<Particle> particles = [];
+  late Random _rng;
+
+  _FireworksPainter(this.progress) {
+    _rng = Random();
+    _generateParticles();
+  }
+
+  void _generateParticles() {
+    final colors = [
+      const Color(0xFFFFD700), // Gold
+      const Color(0xFFFF6B6B), // Red
+      const Color(0xFF4ECDC4), // Teal
+      const Color(0xFFFFE66D), // Yellow
+      const Color(0xFF95E1D3), // Mint
+      const Color(0xFFF38181), // Pink
+      const Color(0xFFAA96DA), // Purple
+      const Color(0xFFFCBB25), // Bright Yellow
+    ];
+
+    // Generate 250+ particles for REAL fireworks effect
+    for (int i = 0; i < 250; i++) {
+      final angle = (_rng.nextDouble() * 2 * pi);
+      final speed = 150 + _rng.nextDouble() * 400; // Faster particles
+      final size = 2 + _rng.nextDouble() * 10;
+      
+      particles.add(
+        Particle(
+          baseX: 683 / 2,       // Center X
+          baseY: 384 / 2,       // Center Y
+          vx: (speed * cos(angle)),
+          vy: (speed * sin(angle)),
+          color: colors[_rng.nextInt(colors.length)],
+          size: size,
+          trailLength: 5 + _rng.nextInt(15),
+        ),
+      );
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Background fade (semi-transparent black overlay)
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = Colors.black.withValues(alpha: 0.1 * progress),
+    );
+
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+
+    for (final particle in particles) {
+      // Physics: position = v * t + 0.5 * g * t²
+      final t = progress;
+      final x = centerX + particle.vx * t * 60 - particle.vx * t * t * 20;
+      final y = centerY + particle.vy * t * 60 + 150 * t * t; // Gravity effect
+
+      // Alpha fade (particles disappear as progress approaches 1)
+      final alpha = (1.0 - progress).clamp(0.0, 1.0);
+      
+      // Size shrink over time
+      final currentSize = particle.size * (1 - progress * 0.7);
+
+      // Draw particle with glow effect
+      final glowPaint = Paint()
+        ..color = particle.color.withValues(alpha: alpha * 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+      final particlePaint = Paint()
+        ..color = particle.color.withValues(alpha: alpha)
+        ..isAntiAlias = true;
+
+      // Glow
+      canvas.drawCircle(Offset(x, y), currentSize * 2, glowPaint);
+      // Particle
+      canvas.drawCircle(Offset(x, y), currentSize, particlePaint);
+
+      // Draw trailing sparkles
+      if (progress > 0.1) {
+        for (int i = 1; i < particle.trailLength; i++) {
+          final trailProgress = progress - (i * 0.02);
+          if (trailProgress > 0) {
+            final trailX = centerX +
+                particle.vx * trailProgress * 60 -
+                particle.vx * trailProgress * trailProgress * 20;
+            final trailY = centerY +
+                particle.vy * trailProgress * 60 +
+                150 * trailProgress * trailProgress;
+
+            final trailAlpha = (1.0 - trailProgress).clamp(0.0, 1.0) *
+                0.3; // Trail is dimmer
+            final trailSize = particle.size * 0.5 * (1 - trailProgress * 0.7);
+
+            final trailPaint = Paint()
+              ..color = particle.color.withValues(alpha: trailAlpha)
+              ..isAntiAlias = true;
+
+            canvas.drawCircle(Offset(trailX, trailY), trailSize, trailPaint);
+          }
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FireworksPainter oldDelegate) => true;
+}
+
+class Particle {
+  final double baseX, baseY;
+  final double vx, vy;
+  final Color color;
+  final double size;
+  final int trailLength;
+
+  Particle({
+    required this.baseX,
+    required this.baseY,
+    required this.vx,
+    required this.vy,
+    required this.color,
+    required this.size,
+    required this.trailLength,
+  });
+}
+
