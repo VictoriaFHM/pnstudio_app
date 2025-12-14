@@ -37,7 +37,7 @@ class ComputeRepository {
     try {
       final res = await _dio.post(ApiEndpoints.compute, data: body);
       return ComputeResponse.fromJson(res.data as Map<String, dynamic>);
-    } on DioError catch (err) {
+    } on DioException catch (err) {
       // If the backend returns a structured error message, surface it
       final data = err.response?.data;
       if (data is Map && data.containsKey('error')) {

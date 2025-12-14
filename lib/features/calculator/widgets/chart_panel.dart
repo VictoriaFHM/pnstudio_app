@@ -39,12 +39,12 @@ class _ChartContent extends StatelessWidget {
   /// Genera spots para la gráfica P vs RL
   /// Basado en el rango [rlMin, rlMax] y modelando la parábola típica
   List<FlSpot> _generateSpots() {
-    if (result == null) return [];
-    
+    if (result == null || !result!.feasible) return [];
+
     final rlMin = result!.rlMin;
     final rlMax = result!.rlMax;
     final pmax = result!.pmax;
-    
+
     // Generamos 200+ puntos entre rlMin y rlMax para mayor precisión
     // Asumimos que P tiene un máximo alrededor de rlMin + (rlMax - rlMin)/2
     final numPoints = 200;
@@ -55,7 +55,7 @@ class _ChartContent extends StatelessWidget {
     }
     final step = range / (numPoints - 1);
     final spots = <FlSpot>[];
-    
+
     for (int i = 0; i < numPoints; i++) {
       final rl = rlMin + (i * step);
       // Modelo simple: parábola invertida con pico en Pmax
@@ -63,20 +63,22 @@ class _ChartContent extends StatelessWidget {
       // Para simplificar: asumimos que el máximo está en el punto medio del rango
       final distFromMax = (rl - (rlMin + rlMax) / 2).abs();
       final maxDist = range / 2;
-      final p = pmax * (1 - (distFromMax / maxDist) * (distFromMax / maxDist)).clamp(0, 1);
+      final p =
+          pmax *
+          (1 - (distFromMax / maxDist) * (distFromMax / maxDist)).clamp(0, 1);
       spots.add(FlSpot(rl, p));
     }
-    
+
     return spots;
   }
 
   /// Genera líneas verticales para rlMin, rlMax, y recommendedRl (si existe)
   /// Usa colores y estilos prominentes para énfasis
   List<VerticalLine> _buildVerticalLines() {
-    if (result == null) return [];
-    
+    if (result == null || !result!.feasible) return [];
+
     final lines = <VerticalLine>[];
-    
+
     // RLmin: dashed marker (now styled to match requested emphasis)
     lines.add(
       VerticalLine(
@@ -97,7 +99,7 @@ class _ChartContent extends StatelessWidget {
         ),
       ),
     );
-    
+
     // RLmax: dashed marker
     lines.add(
       VerticalLine(
@@ -118,7 +120,7 @@ class _ChartContent extends StatelessWidget {
         ),
       ),
     );
-    
+
     // recommendedRl (if not null): dashed amber (Color(0xFFFF8F00)), strokeWidth 3.0
     if (result!.recommendedRl != null) {
       lines.add(
@@ -141,7 +143,7 @@ class _ChartContent extends StatelessWidget {
         ),
       );
     }
-    
+
     return lines;
   }
 
@@ -161,7 +163,29 @@ class _ChartContent extends StatelessWidget {
           child: Text(
             'Introduce los datos y presiona Calcular para generar la gráfica.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Color(0xFF707B50)),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Color(0xFF707B50)),
+          ),
+        ),
+      );
+    }
+
+    // Si no es factible, no mostrar gráfica
+    if (!result!.feasible) {
+      return SizedBox(
+        height: 260,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'No se puede generar la gráfica: los parámetros ingresados no son factibles.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ),
       );
@@ -206,12 +230,18 @@ class _ChartContent extends StatelessWidget {
           if (x <= 0) return 1.0;
           final p = pow(10, (log(x) / ln10).floor()).toDouble();
           final n = x / p;
-          final m = (n <= 1) ? 1 : (n <= 2) ? 2 : (n <= 5) ? 5 : 10;
+          final m = (n <= 1)
+              ? 1
+              : (n <= 2)
+              ? 2
+              : (n <= 5)
+              ? 5
+              : 10;
           return m * p;
         }
 
         final raw = dx / 8.0;
-  final step = niceStep(raw);
+        final step = niceStep(raw);
 
         final chart = SizedBox(
           height: chartHeight,
@@ -238,7 +268,10 @@ class _ChartContent extends StatelessWidget {
                         );
                       },
                     ),
-                    axisNameWidget: const Text('P (W)', style: TextStyle(fontSize: 11)),
+                    axisNameWidget: const Text(
+                      'P (W)',
+                      style: TextStyle(fontSize: 11),
+                    ),
                     axisNameSize: 18,
                   ),
                   bottomTitles: AxisTitles(
@@ -253,7 +286,9 @@ class _ChartContent extends StatelessWidget {
                           return const SizedBox.shrink();
                         }
                         final absStep = step.abs();
-                        final decimals = absStep >= 1 ? 0 : (absStep >= 0.1 ? 1 : 2);
+                        final decimals = absStep >= 1
+                            ? 0
+                            : (absStep >= 0.1 ? 1 : 2);
                         return Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
@@ -263,11 +298,18 @@ class _ChartContent extends StatelessWidget {
                         );
                       },
                     ),
-                    axisNameWidget: const Text('RL (Ω)', style: TextStyle(fontSize: 11)),
+                    axisNameWidget: const Text(
+                      'RL (Ω)',
+                      style: TextStyle(fontSize: 11),
+                    ),
                     axisNameSize: 18,
                   ),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 lineBarsData: [
                   LineChartBarData(

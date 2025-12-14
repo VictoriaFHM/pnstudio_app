@@ -25,7 +25,9 @@ class _AdvicePageState extends State<AdvicePage> {
   Future<List<SectorAdvice>> _loadFromAsset() async {
     final s = await rootBundle.loadString('assets/data/sector_advice.json');
     final list = json.decode(s) as List<dynamic>;
-    return list.map((e) => SectorAdvice.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => SectorAdvice.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Widget _buildSmallCard(SectorAdvice item) {
@@ -42,11 +44,24 @@ class _AdvicePageState extends State<AdvicePage> {
               SizedBox(
                 height: 56,
                 child: item.imageAsset != null
-                    ? Image.asset(item.imageAsset!, fit: BoxFit.contain, errorBuilder: (c,e,s)=>const Center(child: Text('No se pudo cargar la imagen')))
+                    ? Image.asset(
+                        item.imageAsset!,
+                        fit: BoxFit.contain,
+                        errorBuilder: (c, e, s) => const Center(
+                          child: Text('No se pudo cargar la imagen'),
+                        ),
+                      )
                     : const Icon(Icons.image_not_supported),
               ),
               const SizedBox(height: 8),
-              Text(item.sector, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              Text(
+                item.sector,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
         ),
@@ -83,21 +98,37 @@ class _AdvicePageState extends State<AdvicePage> {
                 const SizedBox(height: 16),
 
                 // Small cards row (up to 5)
-                LayoutBuilder(builder: (context, c) {
-                  final isWide = c.maxWidth >= 800;
-                  final cards = items.take(5).map(_buildSmallCard).toList();
-                  return isWide
-                      ? Row(
-                          children: cards
-                              .map((w) => Expanded(child: Padding(padding: const EdgeInsets.all(6), child: w)))
-                              .toList(),
-                        )
-                      : Column(
-                          children: cards
-                              .map((w) => Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: w))
-                              .toList(),
-                        );
-                }),
+                LayoutBuilder(
+                  builder: (context, c) {
+                    final isWide = c.maxWidth >= 800;
+                    final cards = items.take(5).map(_buildSmallCard).toList();
+                    return isWide
+                        ? Row(
+                            children: cards
+                                .map(
+                                  (w) => Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6),
+                                      child: w,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          )
+                        : Column(
+                            children: cards
+                                .map(
+                                  (w) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    child: w,
+                                  ),
+                                )
+                                .toList(),
+                          );
+                  },
+                ),
 
                 const SizedBox(height: 20),
 
@@ -112,12 +143,33 @@ class _AdvicePageState extends State<AdvicePage> {
                       DataColumn(label: Text('Potencia (W)')),
                     ],
                     rows: items
-                        .map((e) => DataRow(cells: [
+                        .map(
+                          (e) => DataRow(
+                            cells: [
                               DataCell(Text(e.sector)),
-                              DataCell(SizedBox(width: 300, child: Text(e.causasTecnicas))),
-                              DataCell(Text(e.eficiencia == null ? '—' : e.eficiencia!.toStringAsFixed(1))),
-                              DataCell(Text(e.potencia == null ? '—' : e.potencia!.toStringAsFixed(1))),
-                            ]))
+                              DataCell(
+                                SizedBox(
+                                  width: 300,
+                                  child: Text(e.causasTecnicas),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  e.eficiencia == null
+                                      ? '—'
+                                      : e.eficiencia!.toStringAsFixed(1),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  e.potencia == null
+                                      ? '—'
+                                      : e.potencia!.toStringAsFixed(1),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
                         .toList(),
                   ),
                 ),
@@ -127,7 +179,10 @@ class _AdvicePageState extends State<AdvicePage> {
                   child: ElevatedButton(
                     onPressed: () => context.push('/mode'),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       child: Text('Comenzar a calcular'),
                     ),
                   ),

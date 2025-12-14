@@ -22,8 +22,8 @@ Map<String, dynamic> _$ComputeRequestToJson(ComputeRequest instance) =>
       'vth': instance.vth,
       'rth': instance.rth,
       'k': instance.k,
-      'kPercent': instance.kPercent,
+      'kPercent': ?instance.kPercent,
       'c': instance.c,
-      'cPercent': instance.cPercent,
-      'pMinW': instance.pMinW,
+      'cPercent': ?instance.cPercent,
+      'pMinW': ?instance.pMinW,
     };

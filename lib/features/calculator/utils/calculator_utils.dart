@@ -1,4 +1,5 @@
 /// Utilidades de parsing y validación null-safe para la calculadora
+library;
 
 /// Verifica si una cadena está vacía (null o whitespace)
 bool isEmpty(String? s) => s == null || s.trim().isEmpty;
@@ -64,7 +65,7 @@ String? validatePMinW(String? v) {
 String? validateKOneOf(String? kVal, String? kPercentVal) {
   final kEmpty = isEmpty(kVal);
   final kPercentEmpty = isEmpty(kPercentVal);
-  
+
   if (kEmpty && kPercentEmpty) {
     return 'Debes ingresar k o k% (uno obligatorio)';
   }
@@ -78,7 +79,7 @@ String? validateKOneOf(String? kVal, String? kPercentVal) {
 String? validateCOneOf(String? cVal, String? cPercentVal) {
   final cEmpty = isEmpty(cVal);
   final cPercentEmpty = isEmpty(cPercentVal);
-  
+
   if (!cEmpty && !cPercentEmpty) {
     return 'No puedes ingresar c y c% a la vez';
   }

@@ -187,37 +187,56 @@ class _CalculatorPageState extends State<CalculatorPage> {
         final kPctNullable = _toDoubleOrNull(_kPercent.text);
         final cPctNullable = _toDoubleOrNull(_cPercent.text);
         if (kPctNullable == null || cPctNullable == null) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa eficiencia (%) y potencia (%)')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Completa eficiencia (%) y potencia (%)'),
+            ),
+          );
           setState(() => _loading = false);
           return;
         }
 
         // Build request with ONLY the required fields for porcentaje mode
-  final req = ComputeRequest(vth: vth, rth: rth, kPercent: kPctNullable, cPercent: cPctNullable);
+        final req = ComputeRequest(
+          vth: vth,
+          rth: rth,
+          kPercent: kPctNullable,
+          cPercent: cPctNullable,
+        );
         final res = await _computeRepo.compute(req);
         setState(() => _result = res);
       } else if (widget.mode == InputMode.exacto) {
         // exact mode: parse k and c as exact values; require one of them? we rely on existing validators
-  final kVal = _toDoubleOrNull(_k.text);
-  final cVal = _toDoubleOrNull(_c.text);
-  final pMin = _toDoubleOrNull(_pMinW.text);
+        final kVal = _toDoubleOrNull(_k.text);
+        final cVal = _toDoubleOrNull(_c.text);
+        final pMin = _toDoubleOrNull(_pMinW.text);
 
         // If both c and pMin missing, backend requires at least one; enforce here
         if (cVal == null && pMin == null) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes ingresar c o P mínima (W)')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Debes ingresar c o P mínima (W)')),
+          );
           setState(() => _loading = false);
           return;
         }
 
-        final req = ComputeRequest(vth: vth, rth: rth, k: kVal, c: cVal, pMinW: pMin);
+        final req = ComputeRequest(
+          vth: vth,
+          rth: rth,
+          k: kVal,
+          c: cVal,
+          pMinW: pMin,
+        );
         final res = await _computeRepo.compute(req);
         setState(() => _result = res);
       } else {
         // basico
-  final pMin = _toDoubleOrNull(_pMinW.text);
+        final pMin = _toDoubleOrNull(_pMinW.text);
         if (pMin == null) {
           // backend requires c/cPercent or pMinW; here ask user to provide pMinW
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes ingresar c% o P mínima (W)')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Debes ingresar c% o P mínima (W)')),
+          );
           setState(() => _loading = false);
           return;
         }
@@ -289,7 +308,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
         toolbarHeight: 84,
         title: Text(
           'Evaluación de Potencia Entregada a la Carga',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -304,53 +325,55 @@ class _CalculatorPageState extends State<CalculatorPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                    TextFormField(
+                TextFormField(
                   controller: _vth,
                   focusNode: _vthFocus,
-                      decoration: const InputDecoration(
-                        labelText: 'Vth (V) *',
-                        helperText: 'Ingrese un valor mayor que cero.',
-                      ),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Ingrese un valor mayor que cero.';
-                        final x = double.tryParse(v.replaceAll(',', '.'));
-                        if (x == null) return 'Número inválido';
-                        if (x <= 0) return 'Ingrese un valor mayor que cero.';
-                        return null;
-                      },
+                  decoration: const InputDecoration(
+                    labelText: 'Vth (V) *',
+                    helperText: 'Ingrese un valor mayor que cero.',
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty)
+                      return 'Ingrese un valor mayor que cero.';
+                    final x = double.tryParse(v.replaceAll(',', '.'));
+                    if (x == null) return 'Número inválido';
+                    if (x <= 0) return 'Ingrese un valor mayor que cero.';
+                    return null;
+                  },
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                 ),
-                    const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _rth,
                   focusNode: _rthFocus,
-                      decoration: const InputDecoration(
-                        labelText: 'Rth (Ω) *',
-                        helperText: 'Ingrese un valor mayor que cero.',
-                      ),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Ingrese un valor mayor que cero.';
-                        final x = double.tryParse(v.replaceAll(',', '.'));
-                        if (x == null) return 'Número inválido';
-                        if (x <= 0) return 'Ingrese un valor mayor que cero.';
-                        return null;
-                      },
+                  decoration: const InputDecoration(
+                    labelText: 'Rth (Ω) *',
+                    helperText: 'Ingrese un valor mayor que cero.',
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty)
+                      return 'Ingrese un valor mayor que cero.';
+                    final x = double.tryParse(v.replaceAll(',', '.'));
+                    if (x == null) return 'Número inválido';
+                    if (x <= 0) return 'Ingrese un valor mayor que cero.';
+                    return null;
+                  },
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                 ),
-                    const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 if (showExact) ...[
                   TextFormField(
                     controller: _k,
                     focusNode: _kFocus,
                     enabled: _kEnabled,
-                          decoration: const InputDecoration(
-                            labelText: 'k (eficiencia, 0..1)',
-                            helperText: 'Rango: 0..1',
-                          ),
+                    decoration: const InputDecoration(
+                      labelText: 'k (eficiencia, 0..1)',
+                      helperText: 'Rango: 0..1',
+                    ),
                     validator: (v) {
                       final otherHas = _kPercent.text.trim().isNotEmpty;
                       if (v == null || v.trim().isEmpty) {
@@ -394,10 +417,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     validator: (v) {
                       final x = _toDoubleOrNull(v ?? '');
                       if (x == null) return 'k% es obligatorio';
-                      if (x <= 0.01 || x > 99.9999) return 'k% debe ser (0.01, 99.9999]';
+                      if (x <= 0.01 || x > 99.9999)
+                        return 'k% debe ser (0.01, 99.9999]';
                       return null;
                     },
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -414,10 +440,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     validator: (v) {
                       final x = _toDoubleOrNull(v ?? '');
                       if (x == null) return 'c% es obligatorio';
-                      if (x <= 0.01 || x > 100) return 'c% debe ser (0.01, 100]';
+                      if (x <= 0.01 || x > 100)
+                        return 'c% debe ser (0.01, 100]';
                       return null;
                     },
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    ],
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -447,20 +476,44 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 ElevatedButton(
                   onPressed: _loading ? null : _onSubmit,
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                    backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                      states,
+                    ) {
                       const base = Color(0xFF6E8C1A);
                       const hover = Color(0xFF88A71D);
-                      if (states.contains(MaterialState.hovered) || states.contains(MaterialState.pressed)) return hover;
+                      if (states.contains(WidgetState.hovered) ||
+                          states.contains(WidgetState.pressed))
+                        return hover;
                       return base;
                     }),
-                    foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                    elevation: MaterialStateProperty.resolveWith<double>((states) => states.contains(MaterialState.pressed) ? 6 : 4),
-                    padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 28, vertical: 14)),
-                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    foregroundColor: WidgetStateProperty.all<Color>(
+                      Colors.white,
+                    ),
+                    elevation: WidgetStateProperty.resolveWith<double>(
+                      (states) => states.contains(WidgetState.pressed) ? 6 : 4,
+                    ),
+                    padding: WidgetStateProperty.all(
+                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                    ),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                   child: _loading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Calcular', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Calcular',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
@@ -495,8 +548,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
               ],
               const SizedBox(height: 8),
 
-              // ✅ BANNER con la inecuación
-              if (_result != null) ...[
+              // ✅ BANNER con la inecuación (solo si es factible)
+              if (_result != null && _result!.feasible) ...[
                 InequalityBanner(
                   k: _getKNullable(),
                   c: _getCNullable(),
@@ -515,39 +568,38 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   child: ElevatedButton(
                     onPressed: _onFinishPressed,
                     style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.resolveWith<Color>(
-                        (states) {
-                          const base = Color(0xFF6E8C1A); // Olive green (unified)
-                          const hover = Color(0xFF5A7315); // darker olive for hover
-                          if (states
-                              .contains(MaterialState.hovered)) {
-                            return hover;
-                          }
-                          return base;
-                        },
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                        states,
+                      ) {
+                        const base = Color(0xFF6E8C1A); // Olive green (unified)
+                        const hover = Color(
+                          0xFF5A7315,
+                        ); // darker olive for hover
+                        if (states.contains(WidgetState.hovered)) {
+                          return hover;
+                        }
+                        return base;
+                      }),
+                      foregroundColor: WidgetStateProperty.all<Color>(
+                        Colors.white,
                       ),
-                      foregroundColor:
-                          MaterialStateProperty.all<Color>(
-                              Colors.white),
-                      elevation:
-                          MaterialStateProperty.resolveWith<double>(
-                        (states) {
-                          if (states
-                              .contains(MaterialState.hovered)) {
-                            return 8;
-                          }
-                          return 4;
-                        },
-                      ),
-                      padding: MaterialStateProperty.all<EdgeInsets>(
+                      elevation: WidgetStateProperty.resolveWith<double>((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return 8;
+                        }
+                        return 4;
+                      }),
+                      padding: WidgetStateProperty.all<EdgeInsets>(
                         const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 16),
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                       ),
                     ),
                     child: const Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                       child: Text(
                         'Terminar',
                         style: TextStyle(
@@ -566,7 +618,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
               SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1200),
                   margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(minHeight: c.maxHeight),
@@ -583,9 +634,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     absorbing: _overlayOpacity > 0.1,
                     child: Container(
                       color: Colors.black.withValues(alpha: 0.2),
-                      child: const Center(
-                        child: _FireworksParticles(),
-                      ),
+                      child: const Center(child: _FireworksParticles()),
                     ),
                   ),
                 ),
@@ -665,11 +714,11 @@ class _FireworksPainter extends CustomPainter {
       final angle = (_rng.nextDouble() * 2 * pi);
       final speed = 150 + _rng.nextDouble() * 400; // Faster particles
       final size = 2 + _rng.nextDouble() * 10;
-      
+
       particles.add(
         Particle(
-          baseX: 683 / 2,       // Center X
-          baseY: 384 / 2,       // Center Y
+          baseX: 683 / 2, // Center X
+          baseY: 384 / 2, // Center Y
           vx: (speed * cos(angle)),
           vy: (speed * sin(angle)),
           color: colors[_rng.nextInt(colors.length)],
@@ -699,7 +748,7 @@ class _FireworksPainter extends CustomPainter {
 
       // Alpha fade (particles disappear as progress approaches 1)
       final alpha = (1.0 - progress).clamp(0.0, 1.0);
-      
+
       // Size shrink over time
       final currentSize = particle.size * (1 - progress * 0.7);
 
@@ -722,15 +771,17 @@ class _FireworksPainter extends CustomPainter {
         for (int i = 1; i < particle.trailLength; i++) {
           final trailProgress = progress - (i * 0.02);
           if (trailProgress > 0) {
-            final trailX = centerX +
+            final trailX =
+                centerX +
                 particle.vx * trailProgress * 60 -
                 particle.vx * trailProgress * trailProgress * 20;
-            final trailY = centerY +
+            final trailY =
+                centerY +
                 particle.vy * trailProgress * 60 +
                 150 * trailProgress * trailProgress;
 
-            final trailAlpha = (1.0 - trailProgress).clamp(0.0, 1.0) *
-                0.3; // Trail is dimmer
+            final trailAlpha =
+                (1.0 - trailProgress).clamp(0.0, 1.0) * 0.3; // Trail is dimmer
             final trailSize = particle.size * 0.5 * (1 - trailProgress * 0.7);
 
             final trailPaint = Paint()
@@ -765,4 +816,3 @@ class Particle {
     required this.trailLength,
   });
 }
-

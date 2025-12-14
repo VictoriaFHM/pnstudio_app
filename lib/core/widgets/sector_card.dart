@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/design_tokens.dart';
 
 /// Card reutilizable para mostrar sectores con imagen
-/// 
+///
 /// Características:
 /// - Imagen a full width con aspectRatio 16:9
 /// - Título (16px bold) y subtítulo (14px ink-500)
@@ -16,13 +16,13 @@ class SectorCard extends StatefulWidget {
   final bool isSelected;
 
   const SectorCard({
-    Key? key,
+    super.key,
     required this.imagePath,
     required this.title,
     required this.subtitle,
     this.onTap,
     this.isSelected = false,
-  }) : super(key: key);
+  });
 
   @override
   State<SectorCard> createState() => _SectorCardState();
@@ -52,8 +52,8 @@ class _SectorCardState extends State<SectorCard> {
             boxShadow: _isHovered
                 ? DesignTokens.shadowHover
                 : widget.isSelected
-                    ? DesignTokens.shadowLg
-                    : DesignTokens.shadowMd,
+                ? DesignTokens.shadowLg
+                : DesignTokens.shadowMd,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,8 +75,7 @@ class _SectorCardState extends State<SectorCard> {
                           child: Image.asset(
                             widget.imagePath,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) =>
-                                Container(
+                            errorBuilder: (context, error, stack) => Container(
                               color: DesignTokens.sand100,
                               child: Center(
                                 child: Icon(

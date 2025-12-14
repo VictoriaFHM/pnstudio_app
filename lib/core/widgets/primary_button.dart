@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/design_tokens.dart';
 
 /// Botón primario unificado para toda la aplicación
-/// 
+///
 /// Características:
 /// - Color: verde oliva (#6B8E23)
 /// - Hover: verde oliva oscuro (#5C7C1E)
@@ -19,7 +19,7 @@ class PrimaryButton extends StatelessWidget {
   final Size? minimumSize;
 
   const PrimaryButton({
-    Key? key,
+    super.key,
     required this.onPressed,
     required this.label,
     this.leadingIcon = Icons.arrow_forward_rounded,
@@ -27,7 +27,7 @@ class PrimaryButton extends StatelessWidget {
     this.isEnabled = true,
     this.padding,
     this.minimumSize,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +39,7 @@ class PrimaryButton extends StatelessWidget {
               width: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(DesignTokens.white),
+                valueColor: AlwaysStoppedAnimation<Color>(DesignTokens.white),
               ),
             )
           : Icon(leadingIcon),
@@ -52,63 +51,63 @@ class PrimaryButton extends StatelessWidget {
         ),
       ),
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.resolveWith<Color>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.disabled)) {
-              return DesignTokens.sand100;
-            }
-            if (states.contains(MaterialState.hovered)) {
-              return DesignTokens.olive700;
-            }
-            return DesignTokens.olive600;
-          },
-        ),
-        foregroundColor: MaterialStateProperty.resolveWith<Color>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.disabled)) {
-              return DesignTokens.ink500;
-            }
-            return DesignTokens.white;
-          },
-        ),
-        padding: MaterialStateProperty.all(
+        backgroundColor: WidgetStateProperty.resolveWith<Color>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.disabled)) {
+            return DesignTokens.sand100;
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return DesignTokens.olive700;
+          }
+          return DesignTokens.olive600;
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith<Color>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.disabled)) {
+            return DesignTokens.ink500;
+          }
+          return DesignTokens.white;
+        }),
+        padding: WidgetStateProperty.all(
           padding ??
               const EdgeInsets.symmetric(
                 horizontal: DesignTokens.buttonPaddingHorizontal,
                 vertical: DesignTokens.buttonPaddingVertical,
               ),
         ),
-        minimumSize: MaterialStateProperty.all(
+        minimumSize: WidgetStateProperty.all(
           minimumSize ??
               const Size(double.infinity, DesignTokens.buttonHeightMin),
         ),
-        shape: MaterialStateProperty.all(
+        shape: WidgetStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DesignTokens.radiusPill),
           ),
         ),
-        elevation: MaterialStateProperty.resolveWith<double>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.hovered)) {
-              return 8.0;
-            }
-            if (states.contains(MaterialState.pressed)) {
-              return 4.0;
-            }
+        elevation: WidgetStateProperty.resolveWith<double>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.hovered)) {
+            return 8.0;
+          }
+          if (states.contains(WidgetState.pressed)) {
             return 4.0;
-          },
-        ),
-        shadowColor: MaterialStateProperty.all(
+          }
+          return 4.0;
+        }),
+        shadowColor: WidgetStateProperty.all(
           const Color(0x26000000), // Sombra suave
         ),
-        overlayColor: MaterialStateProperty.resolveWith<Color?>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.focused)) {
-              return DesignTokens.olive700.withOpacity(0.1);
-            }
-            return null;
-          },
-        ),
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.focused)) {
+            return DesignTokens.olive700.withOpacity(0.1);
+          }
+          return null;
+        }),
       ),
     );
   }

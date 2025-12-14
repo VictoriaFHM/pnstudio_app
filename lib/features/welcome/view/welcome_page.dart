@@ -17,7 +17,11 @@ class WelcomePage extends StatelessWidget {
           const rowCardHeight = 220.0; // Reducido de 280
           const imageCardHeight = 200.0; // Compacto para imágenes
 
-          Widget buildRow(Widget left, Widget right, {double height = rowCardHeight}) {
+          Widget buildRow(
+            Widget left,
+            Widget right, {
+            double height = rowCardHeight,
+          }) {
             if (isWide) {
               return SizedBox(
                 height: height,
@@ -77,7 +81,10 @@ class WelcomePage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => context.push('/guide'),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 10,
+                      ),
                       child: Text('Elegir eficiencia y potencia'),
                     ),
                   ),
@@ -108,6 +115,7 @@ class _ImageCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               title,
@@ -115,11 +123,16 @@ class _ImageCard extends StatelessWidget {
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            Expanded(
+            Flexible(
+              fit: FlexFit.loose,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
                   color: Colors.white, // Fondo blanco uniforme
+                  constraints: const BoxConstraints(
+                    minHeight: 120,
+                    maxHeight: 200,
+                  ),
                   child: Image.asset(
                     assetPath,
                     fit: BoxFit.contain,
